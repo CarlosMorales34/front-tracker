@@ -4,29 +4,54 @@ import styles from './dashboard.module.css';
 
 interface StatsRowProps {
   monthlyBalance: DashboardData['monthlyBalance'];
-  currentWeight: DashboardData['currentWeight'];
+  monthlyBalanceHasData: boolean;
+  currentWeightKg: number | null;
+  weightGoalKg: number;
+  currentWeightHasData: boolean;
 }
 
-export function StatsRow({ monthlyBalance, currentWeight }: StatsRowProps) {
-  const weightDiff = Math.abs(currentWeight.kg - currentWeight.goalKg);
-  const weightNote =
-    currentWeight.kg > currentWeight.goalKg
-      ? `Meta ${currentWeight.goalKg} kg · faltan ${weightDiff} kg`
-      : `Meta ${currentWeight.goalKg} kg · alcanzada`;
+export function StatsRow({
+  monthlyBalance,
+  monthlyBalanceHasData,
+  currentWeightKg,
+  weightGoalKg,
+  currentWeightHasData,
+}: StatsRowProps) {
+  const weightNote = (() => {
+    if (currentWeightKg === null) return '';
+    const diff = Math.abs(currentWeightKg - weightGoalKg);
+    return currentWeightKg > weightGoalKg
+      ? `Meta ${weightGoalKg} kg · faltan ${diff} kg`
+      : currentWeightKg < weightGoalKg
+        ? `Meta ${weightGoalKg} kg · faltan ${diff} kg`
+        : `Meta ${weightGoalKg} kg · alcanzada`;
+  })();
 
   return (
     <div className={styles.statsRow}>
       <section className={styles.card}>
         <p className={styles.cardLabel}>Balance del mes</p>
-        <p className={styles.bigStat}>{formatCurrency(monthlyBalance.amount)}</p>
-        <p className={styles.cardNote}>
-          ↗ Ingresos {formatCurrency(monthlyBalance.income)} · Gastos {formatCurrency(monthlyBalance.expenses)}
-        </p>
+        {monthlyBalanceHasData ? (
+          <>
+            <p className={styles.bigStat}>{formatCurrency(monthlyBalance.amount)}</p>
+            <p className={styles.cardNote}>
+              ↗ Ingresos {formatCurrency(monthlyBalance.income)} · Gastos {formatCurrency(monthlyBalance.expenses)}
+            </p>
+          </>
+        ) : (
+          <p className={styles.cardNote}>Registra ingresos o gastos en Finanzas para ver tu balance del mes.</p>
+        )}
       </section>
       <section className={styles.card}>
         <p className={styles.cardLabel}>Peso actual</p>
-        <p className={styles.bigStat}>{currentWeight.kg} kg</p>
-        <p className={styles.cardNote}>{weightNote}</p>
+        {currentWeightHasData && currentWeightKg !== null ? (
+          <>
+            <p className={styles.bigStat}>{currentWeightKg} kg</p>
+            <p className={styles.cardNote}>{weightNote}</p>
+          </>
+        ) : (
+          <p className={styles.cardNote}>Registra tu peso en Peso mensual para verlo aquí.</p>
+        )}
       </section>
     </div>
   );

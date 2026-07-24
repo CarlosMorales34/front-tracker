@@ -5,9 +5,10 @@ interface GreetingHeaderProps {
   name: string;
   dateRangeLabel: string;
   streakDays: number;
+  streakHasData: boolean;
 }
 
-export function GreetingHeader({ name, dateRangeLabel, streakDays }: GreetingHeaderProps) {
+export function GreetingHeader({ name, dateRangeLabel, streakDays, streakHasData }: GreetingHeaderProps) {
   return (
     <header className={styles.greetingHeader}>
       <div>
@@ -17,7 +18,7 @@ export function GreetingHeader({ name, dateRangeLabel, streakDays }: GreetingHea
         </p>
       </div>
       <div className={styles.streakPill}>
-        <FlameIcon /> {streakDays} días de racha
+        <FlameIcon /> {streakHasData ? `${streakDays} días de racha` : 'Empieza tu racha'}
       </div>
     </header>
   );

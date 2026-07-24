@@ -1,0 +1,160 @@
+.heatmap {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 4px;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 900px) {
+  .heatmap {
+    grid-template-columns: repeat(26, 1fr);
+    max-width: 640px;
+  }
+}
+
+.heatCell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.heatCell:disabled {
+  cursor: default;
+}
+
+.weekRow {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 0.2rem;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+
+.weekRowBar {
+  align-self: stretch;
+  width: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.weekRowNum {
+  flex-shrink: 0;
+  width: 46px;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+.weekRowRange {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weekRowPercent {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.weekRowCaret {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.distributionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.8rem;
+}
+
+.distributionLabel {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.distributionValue {
+  width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.counterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.counterName {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.counterPrev {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.counterTag {
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.detailStatRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.detailBigStat {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.detailMeta {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.detailCatRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.detailCatDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.detailActivityRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.82rem;
+}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LogoutButton } from '../../../features/auth/components/LogoutButton';
 import { CompassIcon, SettingsIcon } from '../icons/icons';
 import { ThemeToggle } from '../../theme/ThemeToggle';
 import { NAV_ITEMS } from './nav-items';
@@ -34,11 +35,14 @@ export function Sidebar() {
       </nav>
 
       <div className={styles.footer}>
-        <Link href="/ajustes" className={styles.navItem} data-active={pathname === '/ajustes'}>
-          <SettingsIcon width={19} height={19} />
-          <span>Ajustes</span>
-        </Link>
-        <ThemeToggle />
+        <div className={styles.footerRow}>
+          <Link href="/ajustes" className={styles.navItem} data-active={pathname === '/ajustes'}>
+            <SettingsIcon width={19} height={19} />
+            <span>Ajustes</span>
+          </Link>
+          <ThemeToggle />
+        </div>
+        <LogoutButton variant="row" />
       </div>
     </aside>
   );

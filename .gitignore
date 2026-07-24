@@ -12,3 +12,4 @@ credentials.json
 *.log
 .DS_Store
 .arch-index/
+*.tsbuildinfo

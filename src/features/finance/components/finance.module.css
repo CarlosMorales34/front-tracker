@@ -1,0 +1,50 @@
+.twoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+@media (min-width: 700px) {
+  .twoCol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+}
+
+.colStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.debtRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.debtRowLabel {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--color-text);
+}
+
+.debtInput {
+  width: 100px;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  text-align: right;
+  font-family: inherit;
+}
+
+.debtInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}

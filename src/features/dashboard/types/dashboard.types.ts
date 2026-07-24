@@ -1,5 +1,7 @@
 export interface CategoryHours {
-  label: string;
+  categoryId: string;
+  name: string;
+  color: string;
   hours: number;
 }
 
@@ -8,32 +10,25 @@ export interface AnnualBalanceYear {
   amount: number;
 }
 
+// Cada sección trae su propio `hasData`: un 0 real (ej. racha en 0 días
+// porque hoy no registraste) es distinto de "nunca has usado este módulo" --
+// el segundo caso muestra un estado vacío, no un dato falso.
 export interface DashboardData {
-  greetingName: string;
-  dateRangeLabel: string;
   streakDays: number;
-  productivity: {
-    percent: number;
-    goalHours: number;
-    note: string;
-  };
-  streak: {
-    days: number;
-    note: string;
-  };
+  streakHasData: boolean;
+  productivityPercent: number | null;
+  productivityHasData: boolean;
   categoryHours: CategoryHours[];
-  monthlyBalance: {
-    amount: number;
-    income: number;
-    expenses: number;
-  };
-  currentWeight: {
-    kg: number;
-    goalKg: number;
-  };
+  monthlyBalance: { amount: number; income: number; expenses: number };
+  monthlyBalanceHasData: boolean;
+  currentWeightKg: number | null;
+  weightGoalKg: number;
+  currentWeightHasData: boolean;
   annualBalance: {
+    year: number;
     amount: number;
-    growthPercentVsPreviousYear: number;
+    growthPercentVsPreviousYear: number | null;
     byYear: AnnualBalanceYear[];
   };
+  annualBalanceHasData: boolean;
 }

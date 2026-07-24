@@ -1,17 +1,26 @@
-import { DashboardData } from '../types/dashboard.types';
 import { ProgressBar } from './ProgressBar';
 import styles from './dashboard.module.css';
 
-export function ProductivityCard({ productivity }: { productivity: DashboardData['productivity'] }) {
+interface ProductivityCardProps {
+  percent: number | null;
+  hasData: boolean;
+}
+
+export function ProductivityCard({ percent, hasData }: ProductivityCardProps) {
   return (
     <section className={styles.card}>
       <p className={styles.cardLabel}>Productividad de la semana</p>
-      <p className={styles.bigStat}>
-        {productivity.percent}%{' '}
-        <span className={styles.bigStatCaption}>de tu meta de {productivity.goalHours} hrs productivas</span>
-      </p>
-      <ProgressBar percent={productivity.percent} />
-      <p className={styles.cardNote}>{productivity.note}</p>
+      {hasData && percent !== null ? (
+        <>
+          <p className={styles.bigStat}>{percent}%</p>
+          <ProgressBar percent={percent} />
+        </>
+      ) : (
+        <p className={styles.cardNote}>
+          Estamos conociéndote para ayudarte a mejorar. Registra actividades en Actividades diarias esta semana para
+          ver tu productividad.
+        </p>
+      )}
     </section>
   );
 }

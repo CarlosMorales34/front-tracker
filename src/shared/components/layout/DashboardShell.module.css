@@ -1,4 +1,5 @@
 .shell {
+  position: relative;
   display: flex;
   min-height: 100vh;
   background: var(--color-bg);
@@ -17,15 +18,20 @@
   }
 }
 
-.mobileThemeToggle {
-  position: fixed;
+/* absolute (no fixed): ancla arriba a la derecha del contenido y se
+   desplaza junto con la página al hacer scroll, en vez de quedarse pegada
+   en pantalla como un overlay flotante permanente. */
+.mobileFloatingActions {
+  position: absolute;
   top: 0.9rem;
   right: 1rem;
   z-index: 20;
+  display: flex;
+  gap: 0.5rem;
 }
 
 @media (min-width: 900px) {
-  .mobileThemeToggle {
+  .mobileFloatingActions {
     display: none;
   }
 }

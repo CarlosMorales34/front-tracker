@@ -53,6 +53,18 @@
   box-sizing: border-box;
 }
 
+/* Oculta la barra de scroll visual en toda la app (Firefox + WebKit/Chromium)
+   sin quitar la funcionalidad de scroll -- mismo criterio que ya usaban los
+   mockups originales (scrollbar-width:none / ::-webkit-scrollbar{display:none}). */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
   margin: 0;

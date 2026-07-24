@@ -1,14 +1,23 @@
-import { DashboardData } from '../types/dashboard.types';
 import styles from './dashboard.module.css';
 
-export function StreakCard({ streak }: { streak: DashboardData['streak'] }) {
+interface StreakCardProps {
+  days: number;
+  hasData: boolean;
+}
+
+export function StreakCard({ days, hasData }: StreakCardProps) {
   return (
     <section className={styles.card}>
       <p className={styles.cardLabel}>Racha activa</p>
-      <p className={styles.bigStat}>
-        {streak.days} <span className={styles.bigStatCaption}>días</span>
-      </p>
-      <p className={styles.cardNote}>{streak.note}</p>
+      {hasData ? (
+        <p className={styles.bigStat}>
+          {days} <span className={styles.bigStatCaption}>días</span>
+        </p>
+      ) : (
+        <p className={styles.cardNote}>
+          Estamos conociéndote para ayudarte a mejorar. Registra al menos una actividad hoy para empezar tu racha.
+        </p>
+      )}
     </section>
   );
 }
