@@ -1,10 +1,64 @@
 :root {
   color-scheme: light dark;
+
+  /* Paleta light por defecto (usada también como base antes de que el
+     script inline de layout.tsx fije data-theme, y como fallback si JS
+     está deshabilitado y el sistema prefiere light). */
+  --color-bg: #f4f4f6;
+  --color-bg-elevated: #e8e8ec;
+  --color-border: rgba(0, 0, 0, 0.12);
+  --color-accent: #2563eb;
+  --color-accent-contrast: #ffffff;
+  --color-text: #14141a;
+  --color-text-secondary: #5b5b66;
+}
+
+/* Fallback sin JS / antes de hidratar: si el sistema prefiere dark y no hay
+   override manual (data-theme) todavía en <html>, usamos estas variables. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg: #0d0b14;
+    --color-bg-elevated: #1a1720;
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-accent: #8b5cf6;
+    --color-accent-contrast: #ffffff;
+    --color-text: #ffffff;
+    --color-text-secondary: #a3a3a3;
+  }
+}
+
+/* Overrides explícitos: gana siempre que exista data-theme en <html>,
+   sea por preferencia detectada o por toggle manual persistido. */
+:root[data-theme='light'] {
+  --color-bg: #f4f4f6;
+  --color-bg-elevated: #e8e8ec;
+  --color-border: rgba(0, 0, 0, 0.12);
+  --color-accent: #2563eb;
+  --color-accent-contrast: #ffffff;
+  --color-text: #14141a;
+  --color-text-secondary: #5b5b66;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #0d0b14;
+  --color-bg-elevated: #1a1720;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-accent: #8b5cf6;
+  --color-accent-contrast: #ffffff;
+  --color-text: #ffffff;
+  --color-text-secondary: #a3a3a3;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   font-family: system-ui, -apple-system, sans-serif;
   margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 ul {

@@ -2,5 +2,13 @@ node_modules/
 .next/
 out/
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.p12
+credentials.json
 *.log
 .DS_Store
+.arch-index/

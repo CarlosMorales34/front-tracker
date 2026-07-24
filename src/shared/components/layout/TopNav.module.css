@@ -1,0 +1,41 @@
+.topNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 1.25rem 1rem 0;
+}
+
+.pills {
+  display: flex;
+  gap: 0.35rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.25rem;
+}
+
+.pillActive,
+.pillInactive {
+  padding: 0.4rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.pillActive {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.pillInactive {
+  color: var(--color-text-secondary);
+}
+
+.toggleWrap {
+  position: absolute;
+  right: 1rem;
+  top: 1.25rem;
+}

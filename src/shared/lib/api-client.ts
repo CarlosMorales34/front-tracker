@@ -11,5 +11,11 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     throw new Error(body.message ?? 'Request failed');
   }
 
+  // POST /api/auth/logout responde 204 sin body; response.json() sobre un
+  // body vacío tira un SyntaxError, así que lo cortamos antes.
+  if (response.status === 204 || response.status === 205) {
+    return undefined as T;
+  }
+
   return response.json() as Promise<T>;
 }
