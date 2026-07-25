@@ -1,14 +1,16 @@
 const { createServer } = require('http');
 const next = require('next');
 
-const port = process.env.PORT || 3002;
-const app = next({ dev: false });
+const port = parseInt(process.env.PORT, 10) || 3002;
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
   createServer((req, res) => {
     handle(req, res);
-  }).listen(port, () => {
-    console.log(`Vitalis listo en el puerto ${port}`);
+  }).listen(port, err => {
+    if (err) throw err;
+    console.log(`> Ready on http://localhost:${port}`);
   });
 });
