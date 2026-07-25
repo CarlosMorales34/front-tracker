@@ -2,7 +2,7 @@ export type RoutineType = 'single' | 'range';
 
 export interface RoutineTimeRange {
   start: string;
-  end?: string;
+  end?: string | null;
 }
 
 export interface FixedRoutine {
@@ -11,8 +11,7 @@ export interface FixedRoutine {
   name: string;
   type: RoutineType;
   sortOrder: number;
-  // El backend todavía no tiene endpoint de registro por día (routine_logs)
-  // -- hasta que exista, una rutina recién creada/listada no trae horarios.
+  // Vacío salvo que se haya pedido con ?date= (activitiesApi.listRoutines(date, ...)).
   times: RoutineTimeRange[];
 }
 
@@ -34,8 +33,17 @@ export interface Activity {
   categoryId: string;
   name: string;
   sortOrder: number;
-  // El backend todavía no tiene endpoint de registro por día (activity_logs)
-  // -- hasta que exista, todas las horas se muestran vacías ("–").
+  // Horas del día seleccionado (activitiesApi.listActivities(token, date)).
   todayHours: number | null;
+  // Horas por día de la semana en vista (activitiesApi.listActivityLogs),
+  // no viene poblado por listActivities -- ActivitiesView lo arma aparte.
   weekHours: (number | null)[];
+}
+
+export interface ActivityLog {
+  id: string;
+  activityId: string;
+  logDate: string;
+  hours: number;
+  note: string | null;
 }

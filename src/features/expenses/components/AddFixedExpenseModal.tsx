@@ -3,31 +3,31 @@
 import { FormEvent, useState } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import styles from '../../../shared/components/ui/ui.module.css';
-import { MoneyEntryRecurrence, RECURRENCE_LABELS } from '../types/finance.types';
 
-interface AddMoneyModalProps {
-  title: string;
+interface AddFixedExpenseModalProps {
   currencySymbol: string;
   onClose: () => void;
-  onCreate: (name: string, amount: number, recurrence: MoneyEntryRecurrence) => void;
+  onCreate: (name: string, amount: number, dayOfMonth: number, description: string | null) => void;
 }
 
-const RECURRENCE_OPTIONS = Object.entries(RECURRENCE_LABELS) as [MoneyEntryRecurrence, string][];
-
-export function AddMoneyModal({ title, currencySymbol, onClose, onCreate }: AddMoneyModalProps) {
+// Gasto programado: día del mes en que se cobra (ej. Plan celular, día 10)
+// + descripción opcional para completar el concepto cuando el nombre no basta.
+export function AddFixedExpenseModal({ currencySymbol, onClose, onCreate }: AddFixedExpenseModalProps) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
-  const [recurrence, setRecurrence] = useState<MoneyEntryRecurrence>('unique');
+  const [dayOfMonth, setDayOfMonth] = useState('1');
+  const [description, setDescription] = useState('');
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const parsedAmount = Number(amount);
-    if (!name.trim() || !Number.isFinite(parsedAmount)) return;
-    onCreate(name.trim(), parsedAmount, recurrence);
+    const parsedDay = Number(dayOfMonth);
+    if (!name.trim() || !Number.isFinite(parsedAmount) || !Number.isInteger(parsedDay) || parsedDay < 1 || parsedDay > 31) return;
+    onCreate(name.trim(), parsedAmount, parsedDay, description.trim() || null);
   };
 
   return (
-    <Modal title={title} onClose={onClose}>
+    <Modal title="Nuevo gasto programado" onClose={onClose}>
       <form onSubmit={handleSubmit} className={styles.modalForm}>
         <label className={styles.modalLabel}>
           Concepto
@@ -35,7 +35,7 @@ export function AddMoneyModal({ title, currencySymbol, onClose, onCreate }: AddM
             className={styles.modalInput}
             value={name}
             onChange={(event) => setName(event.target.value)}
-            placeholder="Ej. Sueldo"
+            placeholder="Ej. Plan celular"
             autoFocus
           />
         </label>
@@ -51,18 +51,25 @@ export function AddMoneyModal({ title, currencySymbol, onClose, onCreate }: AddM
           />
         </label>
         <label className={styles.modalLabel}>
-          Periodicidad
-          <select
+          Día del mes
+          <input
             className={styles.modalInput}
-            value={recurrence}
-            onChange={(event) => setRecurrence(event.target.value as MoneyEntryRecurrence)}
-          >
-            {RECURRENCE_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            type="number"
+            min={1}
+            max={31}
+            step={1}
+            value={dayOfMonth}
+            onChange={(event) => setDayOfMonth(event.target.value)}
+          />
+        </label>
+        <label className={styles.modalLabel}>
+          Descripción (opcional)
+          <input
+            className={styles.modalInput}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Ej. Línea con AT&T, plan de 500 min"
+          />
         </label>
         <div className={styles.modalActions}>
           <button type="button" className={styles.modalCancelButton} onClick={onClose}>

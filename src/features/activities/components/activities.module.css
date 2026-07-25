@@ -40,13 +40,14 @@
   color: var(--color-text-secondary);
 }
 
-/* El toggle Hoy/Semana es un segmented control claro fijo (no sigue el
-   tema dark/light) -- así se ve en ambos mockups, incluso en dark. */
+/* Segmented control con las mismas variables de tema que .segmentedOption
+   (modales) -- mobile-first más compacto, crece un poco en desktop. */
 .hoySemanaToggle {
   display: flex;
-  background: #e5e5ea;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  padding: 0.2rem;
+  padding: 0.15rem;
   gap: 0.15rem;
   flex-shrink: 0;
 }
@@ -54,19 +55,25 @@
 .hoySemanaToggle button {
   border: none;
   background: transparent;
-  color: #6b6b76;
-  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
   font-weight: 600;
   font-family: inherit;
-  padding: 0.45rem 1rem;
+  padding: 0.35rem 0.7rem;
   border-radius: 7px;
   cursor: pointer;
 }
 
 .hoySemanaToggle button[data-selected='true'] {
-  background: #ffffff;
-  color: #14141a;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+@media (min-width: 700px) {
+  .hoySemanaToggle button {
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+  }
 }
 
 /* --- Day chips --- */
@@ -138,6 +145,60 @@
   color: var(--color-accent);
 }
 
+.categoryToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.categoryCollapseIcon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.categoryCollapseIcon[data-collapsed='true'] {
+  transform: rotate(-90deg);
+}
+
+.categoryHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.reorderButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.reorderButtons .iconOnlyButton {
+  width: 26px;
+  height: 26px;
+}
+
+.reorderButtons .iconOnlyButton:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.reorderButtons .iconOnlyButton:disabled:hover {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.caretUp {
+  transform: rotate(180deg);
+}
+
 .categoryLabel {
   display: flex;
   align-items: center;
@@ -147,6 +208,10 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--cat-color, var(--color-text));
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .categoryDot {
@@ -237,8 +302,8 @@
 
 .routineRow {
   display: flex;
-  align-items: center;
-  gap: 0.85rem;
+  flex-direction: column;
+  gap: 0.6rem;
   padding: 0.9rem 0;
   border-bottom: 1px solid var(--color-border);
 }
@@ -247,13 +312,19 @@
   border-bottom: none;
 }
 
+.routineRowTop {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
 .routineLabel {
   display: flex;
   align-items: center;
   gap: 0.65rem;
   flex-shrink: 0;
-  width: 40%;
-  min-width: 140px;
+  min-width: 0;
 }
 
 .routineIcon {
@@ -298,6 +369,60 @@
   flex-shrink: 0;
 }
 
+/* --- Editor inline de horario de rutina --- */
+
+.routineEditor {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.routineEditorRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.routineTimeInput {
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.routineTimeInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.routineEditorActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.routineAddTurnButton {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
 .hoursBadgeFilled {
   padding: 0.4rem 0.75rem;
   border-radius: 8px;
@@ -318,16 +443,16 @@
 
 .activityRow {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 0.75rem 0;
   border-bottom: 1px solid var(--color-border);
 }
 
-.gripHandle {
-  color: var(--color-text-secondary);
-  opacity: 0.5;
-  flex-shrink: 0;
+.activityRowTop {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .activityName {
@@ -340,15 +465,6 @@
   white-space: nowrap;
 }
 
-.activityTimeField {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 
 .hoursBadge {
   min-width: 34px;

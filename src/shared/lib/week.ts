@@ -5,8 +5,22 @@
 
 const MONTH_LABELS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
+// A propósito NO usa toISOString() (fuerza UTC) -- para un usuario en un
+// timezone negativo (ej. México, UTC-6) con hora local avanzada, convertir a
+// UTC puede saltar al día siguiente, desincronizando el weekStartDate/dateIso
+// que se manda al backend del día de calendario local real.
 function toIso(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Parsea "YYYY-MM-DD" como medianoche LOCAL, no UTC -- new Date(isoString)
+// con un string de solo fecha lo trataría como UTC medianoche, que en un
+// timezone negativo retrocede al día de calendario anterior.
+function parseDateOnly(dateIso: string): Date {
+  return new Date(`${dateIso}T00:00:00`);
 }
 
 export function getSaturdayWeekStart(date: Date): Date {
@@ -23,13 +37,13 @@ export function getCurrentWeekStartIso(): string {
 }
 
 export function addWeeks(dateIso: string, weeks: number): string {
-  const date = new Date(dateIso);
+  const date = parseDateOnly(dateIso);
   date.setDate(date.getDate() + weeks * 7);
   return toIso(date);
 }
 
 export function formatWeekRangeLabel(weekStartIso: string): string {
-  const start = new Date(weekStartIso);
+  const start = parseDateOnly(weekStartIso);
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
   return `${start.getDate()} – ${end.getDate()} ${MONTH_LABELS[end.getMonth()]}`;
@@ -38,7 +52,7 @@ export function formatWeekRangeLabel(weekStartIso: string): string {
 export function getWeekNumberForYear(weekStartIso: string, year: number): number {
   const jan1 = new Date(year, 0, 1);
   const firstWeekStart = getSaturdayWeekStart(jan1);
-  const target = new Date(weekStartIso);
+  const target = parseDateOnly(weekStartIso);
   const diffDays = Math.round((target.getTime() - firstWeekStart.getTime()) / 86400000);
   return Math.floor(diffDays / 7) + 1;
 }

@@ -15,16 +15,27 @@ export interface FixedMonthlyExpense {
   id: string;
   name: string;
   amount: number;
+  dayOfMonth: number | null;
+  description: string | null;
 }
 
 export interface CreateFixedMonthlyExpenseInput {
   name: string;
   amount: number;
+  dayOfMonth: number;
+  description?: string | null;
 }
 
 export interface UpdateExpenseAmountInput {
   name?: string;
   amount?: number;
+}
+
+export interface UpdateFixedExpenseInput {
+  name?: string;
+  amount?: number;
+  dayOfMonth?: number | null;
+  description?: string | null;
 }
 
 // Resumen agregado (mes actual) que arma el backend -- ingresos del mes

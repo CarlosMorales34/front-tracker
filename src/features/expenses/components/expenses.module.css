@@ -1,0 +1,60 @@
+.fixedExpenseRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fixedExpenseRow:last-child {
+  border-bottom: none;
+}
+
+.fixedExpenseTopRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.dayOfMonthWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.dayOfMonthInput {
+  width: 52px;
+  padding: 0.4rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  text-align: center;
+  font-family: inherit;
+}
+
+.dayOfMonthInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.descriptionInput {
+  width: 100%;
+  padding: 0.3rem 0.1rem;
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-family: inherit;
+}
+
+.descriptionInput:focus {
+  outline: none;
+  border-bottom-color: var(--color-accent);
+}

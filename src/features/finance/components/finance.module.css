@@ -19,6 +19,33 @@
   gap: 1.1rem;
 }
 
+.week1AnchorRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: -0.4rem 0 0.2rem;
+}
+
+.week1AnchorLabel {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.week1AnchorInput {
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.78rem;
+  font-family: inherit;
+}
+
+.week1AnchorInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
 .debtRow {
   display: flex;
   align-items: center;
@@ -45,6 +72,240 @@
 }
 
 .debtInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* --- Ingresos anuales (histórico año contra año) --- */
+
+.annualIncomeTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.annualIncomeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.annualIncomeRow:last-child {
+  border-bottom: none;
+}
+
+.annualIncomeYear {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.liveBadge {
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: var(--color-accent);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.annualIncomeAmountReadOnly {
+  padding: 0.4rem 0.2rem;
+  font-size: 0.82rem;
+  color: var(--color-text);
+}
+
+.annualIncomeAmountWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.annualIncomeAmount {
+  width: 90px;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  text-align: right;
+  font-family: inherit;
+}
+
+.annualIncomeAmount:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.growthPositive,
+.growthNegative {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.growthPositive {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+}
+
+.growthNegative {
+  background: color-mix(in srgb, #ef4444 18%, transparent);
+  color: #ef4444;
+}
+
+.growthEmpty {
+  min-width: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+/* --- Capital (Liquidez + Crédito), colapsable --- */
+
+.capitalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  flex-wrap: wrap;
+}
+
+.capitalHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.capitalCollapseIcon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.capitalCollapseIcon[data-collapsed='true'] {
+  transform: rotate(-90deg);
+}
+
+.capitalTotals {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+
+.capitalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.capitalTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.capitalTotalValue {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* --- Tarjetas de crédito --- */
+
+.creditCardRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.creditCardRow:last-child {
+  border-bottom: none;
+}
+
+.creditCardTopRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.creditCardBottomRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.creditCardField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.creditCardAvailable {
+  font-size: 0.82rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* --- Selector "día del mes" reutilizado en gastos programados / tarjetas --- */
+
+.dayOfMonthWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.dayOfMonthInput {
+  width: 52px;
+  padding: 0.4rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.82rem;
+  text-align: center;
+  font-family: inherit;
+}
+
+.dayOfMonthInput:focus {
   outline: none;
   border-color: var(--color-accent);
 }

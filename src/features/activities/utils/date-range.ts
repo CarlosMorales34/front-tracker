@@ -5,8 +5,23 @@ const MONTH_LABELS = [
   'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
 ];
 
+// A propósito NO usa toISOString() (fuerza UTC) -- para un usuario en un
+// timezone negativo (ej. México, UTC-6) con hora local avanzada, convertir a
+// UTC puede saltar al día siguiente, desincronizando el dateIso usado para
+// comparar contra activity_logs.log_date del día del calendario LOCAL que
+// muestran weekdayLabel/dayNumber (esos sí ya usan métodos locales).
 function toIso(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Parsea "YYYY-MM-DD" como medianoche LOCAL, no UTC -- new Date(isoString)
+// con un string de solo fecha lo trataría como UTC medianoche, que en un
+// timezone negativo retrocede al día de calendario anterior.
+function parseDateOnly(dateIso: string): Date {
+  return new Date(`${dateIso}T00:00:00`);
 }
 
 // La semana visible arranca en sábado (mismo criterio que el diseño:
@@ -33,8 +48,8 @@ export function formatDateRangeLabel(days: DayChip[]): string {
   const last = days[days.length - 1];
   if (!first || !last) return '';
 
-  const firstDate = new Date(first.dateIso);
-  const lastDate = new Date(last.dateIso);
+  const firstDate = parseDateOnly(first.dateIso);
+  const lastDate = parseDateOnly(last.dateIso);
 
   const firstLabel = `${first.weekdayLabel[0]}${first.weekdayLabel.slice(1).toLowerCase()} ${first.dayNumber}`;
   const lastLabel = `${last.weekdayLabel[0]}${last.weekdayLabel.slice(1).toLowerCase()} ${last.dayNumber} ${MONTH_LABELS[lastDate.getMonth()]}`;
@@ -47,4 +62,24 @@ export function formatDateRangeLabel(days: DayChip[]): string {
 
 export function getTodayIso(): string {
   return toIso(new Date());
+}
+
+export function addDaysIso(dateIso: string, days: number): string {
+  const date = parseDateOnly(dateIso);
+  date.setDate(date.getDate() + days);
+  return toIso(date);
+}
+
+// Rango [primer día, último día] del mes que contiene `dateIso`.
+export function getMonthRange(dateIso: string): { from: string; to: string } {
+  const date = parseDateOnly(dateIso);
+  const from = new Date(date.getFullYear(), date.getMonth(), 1);
+  const to = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return { from: toIso(from), to: toIso(to) };
+}
+
+export function getPreviousMonthRange(dateIso: string): { from: string; to: string } {
+  const date = parseDateOnly(dateIso);
+  const previousMonthDate = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+  return getMonthRange(toIso(previousMonthDate));
 }

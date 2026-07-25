@@ -1,29 +1,32 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { RoutineType } from '../types/activities.types';
+import { FixedRoutine, RoutineType } from '../types/activities.types';
 import styles from './activities.module.css';
 import { Modal } from './Modal';
 
-interface NewRoutineModalProps {
+interface EditRoutineModalProps {
+  routine: FixedRoutine;
   onClose: () => void;
-  onCreate: (name: string, type: RoutineType) => void;
+  onSave: (changes: { name?: string; type?: RoutineType }) => void;
 }
 
-export function NewRoutineModal({ onClose, onCreate }: NewRoutineModalProps) {
-  const [name, setName] = useState('');
-  // Range por default: la mayoría de rutinas reales (Dormir, Trabajo) son
-  // rangos de horas, no un instante único.
-  const [type, setType] = useState<RoutineType>('range');
+// Reusa el mismo layout que NewRoutineModal, pre-cargado con los valores
+// actuales -- pensado sobre todo para pasar una rutina de "Hora única" a
+// "Rango de horas" (ej. Dormir: hora de acostarse/despertarse) sin perder su
+// posición ni tener que recrearla.
+export function EditRoutineModal({ routine, onClose, onSave }: EditRoutineModalProps) {
+  const [name, setName] = useState(routine.name);
+  const [type, setType] = useState<RoutineType>(routine.type);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!name.trim()) return;
-    onCreate(name.trim(), type);
+    onSave({ name: name.trim(), type });
   };
 
   return (
-    <Modal title="Nueva rutina fija" onClose={onClose}>
+    <Modal title="Editar rutina fija" onClose={onClose}>
       <form onSubmit={handleSubmit} className={styles.modalForm}>
         <label className={styles.modalLabel}>
           Nombre
@@ -31,7 +34,6 @@ export function NewRoutineModal({ onClose, onCreate }: NewRoutineModalProps) {
             className={styles.modalInput}
             value={name}
             onChange={(event) => setName(event.target.value)}
-            placeholder="Ej. Siesta"
             autoFocus
           />
         </label>
@@ -61,7 +63,7 @@ export function NewRoutineModal({ onClose, onCreate }: NewRoutineModalProps) {
             Cancelar
           </button>
           <button type="submit" className={styles.modalPrimaryButton}>
-            Crear rutina
+            Guardar
           </button>
         </div>
       </form>

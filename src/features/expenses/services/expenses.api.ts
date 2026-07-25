@@ -33,16 +33,22 @@ export const expensesApi = {
   listFixed: (accessToken?: string | null): Promise<FixedMonthlyExpense[]> =>
     apiFetch<FixedMonthlyExpense[]>('/api/expenses/fixed', { headers: authHeaders(accessToken) }),
 
-  createFixed: (name: string, amount: number, accessToken?: string | null): Promise<FixedMonthlyExpense> =>
+  createFixed: (
+    name: string,
+    amount: number,
+    dayOfMonth: number,
+    description: string | null,
+    accessToken?: string | null,
+  ): Promise<FixedMonthlyExpense> =>
     apiFetch<FixedMonthlyExpense>('/api/expenses/fixed', {
       method: 'POST',
-      body: JSON.stringify({ name, amount }),
+      body: JSON.stringify({ name, amount, dayOfMonth, description }),
       headers: authHeaders(accessToken),
     }),
 
   updateFixed: (
     id: string,
-    input: { name?: string; amount?: number },
+    input: { name?: string; amount?: number; dayOfMonth?: number | null; description?: string | null },
     accessToken?: string | null
   ): Promise<FixedMonthlyExpense> =>
     apiFetch<FixedMonthlyExpense>(`/api/expenses/fixed/${id}`, {

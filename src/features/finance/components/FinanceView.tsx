@@ -6,46 +6,76 @@ import { CaretDownIcon, CaretLeftIcon, PlusIcon, WarningIcon } from '../../../sh
 import { EditableMoneyRow } from '../../../shared/components/ui/EditableMoneyRow';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { addWeeks, formatWeekRangeLabel, getCurrentWeekStartIso, getWeekNumberForYear } from '../../../shared/lib/week';
+import { creditCardsApi } from '../services/credit-cards.api';
 import { financeApi } from '../services/finance.api';
-import { FinanceWeekSummary, MoneyEntryType } from '../types/finance.types';
+import {
+  CreditCard,
+  FinanceAnnualIncome,
+  FinanceWeekSummary,
+  MoneyEntryRecurrence,
+  RECURRENCE_LABELS,
+  UpdateCreditCardInput,
+} from '../types/finance.types';
+import { getWeekNumberFromAnchor } from '../utils/week';
 import { AddMoneyModal } from './AddMoneyModal';
+import { AnnualIncomeSection } from './AnnualIncomeSection';
+import { CapitalSection } from './CapitalSection';
 import styles from './finance.module.css';
+
+const RECURRENCE_SELECT_OPTIONS = Object.entries(RECURRENCE_LABELS).map(([value, label]) => ({
+  value: value as MoneyEntryRecurrence,
+  label,
+}));
 
 export function FinanceView() {
   const { accessToken } = useAuth();
   const [weekStartDate, setWeekStartDate] = useState(getCurrentWeekStartIso());
   const [summary, setSummary] = useState<FinanceWeekSummary | null>(null);
   const [lastYearBalance, setLastYearBalance] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [addModal, setAddModal] = useState<MoneyEntryType | null>(null);
+  const [annualIncome, setAnnualIncome] = useState<FinanceAnnualIncome[]>([]);
+  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [isAddModalOpen, setAddModalOpen] = useState(false);
 
   const load = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [current, lastYear] = await Promise.all([
-        financeApi.getWeekSummary(weekStartDate, accessToken),
-        financeApi.getWeekSummary(addWeeks(weekStartDate, -52), accessToken),
-      ]);
-      setSummary(current);
-      setLastYearBalance(lastYear.totalIncome - lastYear.totalExpense);
-    } finally {
-      setIsLoading(false);
-    }
+    const [current, lastYear, annualIncomeRes, creditCardsRes] = await Promise.all([
+      financeApi.getWeekSummary(weekStartDate, accessToken),
+      financeApi.getWeekSummary(addWeeks(weekStartDate, -52), accessToken),
+      financeApi.getAnnualIncome(accessToken),
+      creditCardsApi.list(accessToken),
+    ]);
+    setSummary(current);
+    setLastYearBalance(lastYear.totalIncome - lastYear.totalExpense);
+    setAnnualIncome(annualIncomeRes);
+    setCreditCards(creditCardsRes);
   }, [weekStartDate, accessToken]);
 
   useEffect(() => {
     if (accessToken) load();
   }, [accessToken, load]);
 
-  const handleCreate = async (name: string, amount: number) => {
-    if (!addModal) return;
-    await financeApi.createEntry(addModal, name, amount, weekStartDate, accessToken);
-    setAddModal(null);
+  const handleCreate = async (name: string, amount: number, recurrence: MoneyEntryRecurrence) => {
+    await financeApi.createEntry('income', name, amount, recurrence, weekStartDate, accessToken);
+    setAddModalOpen(false);
+    load();
+  };
+
+  const handleSaveAnnualIncome = async (year: number, amount: number) => {
+    await financeApi.putAnnualIncome(year, amount, accessToken);
+    load();
+  };
+
+  const handleDeleteAnnualIncome = async (id: string) => {
+    await financeApi.deleteAnnualIncome(id, accessToken);
     load();
   };
 
   const handleCurrencyChange = async (currency: 'MXN' | 'USD') => {
     await financeApi.updateSettings({ currency }, accessToken);
+    load();
+  };
+
+  const handleWeek1AnchorCommit = async (rawValue: string) => {
+    await financeApi.updateSettings({ week1AnchorDate: rawValue || null }, accessToken);
     load();
   };
 
@@ -56,7 +86,31 @@ export function FinanceView() {
     load();
   };
 
-  if (isLoading || !summary) {
+  const handleSaveWallet = async (balance: number) => {
+    await financeApi.setWallet(balance, accessToken);
+    load();
+  };
+
+  const handleCreateCreditCard = async (name: string, creditLimit: number, dueDay: number, amountOwed: number) => {
+    await creditCardsApi.create(name, creditLimit, dueDay, amountOwed, accessToken);
+    load();
+  };
+
+  const handleSaveCreditCard = async (id: string, changes: UpdateCreditCardInput) => {
+    await creditCardsApi.update(id, changes, accessToken);
+    load();
+  };
+
+  const handleDeleteCreditCard = async (id: string) => {
+    await creditCardsApi.delete(id, accessToken);
+    load();
+  };
+
+  // Solo el primer load (summary null) muestra "Cargando…" reemplazando el
+  // árbol -- los refresh posteriores (tras crear/editar algo) mantienen todo
+  // montado para no perder estado local no controlado por props, como el
+  // colapso de CapitalSection.
+  if (!summary) {
     return (
       <div className={uiStyles.page}>
         <p className={uiStyles.cardNote}>Cargando…</p>
@@ -66,8 +120,15 @@ export function FinanceView() {
 
   const currencySymbol = summary.currency === 'USD' ? 'US$' : '$';
   const balance = summary.totalIncome - summary.totalExpense;
-  const weekNumber = getWeekNumberForYear(weekStartDate, new Date(weekStartDate).getFullYear());
-  const currentYear = new Date(weekStartDate).getFullYear();
+  // new Date(`${iso}T00:00:00`) en vez de new Date(iso): un string de solo
+  // fecha se parsea como UTC medianoche, que en un timezone negativo (ej.
+  // México) retrocede al día de calendario anterior -- afecta getFullYear()
+  // cerca de fin de año.
+  const weekStartDateLocal = new Date(`${weekStartDate}T00:00:00`);
+  const weekNumber = summary.week1AnchorDate
+    ? getWeekNumberFromAnchor(weekStartDate, summary.week1AnchorDate)
+    : getWeekNumberForYear(weekStartDate, weekStartDateLocal.getFullYear());
+  const currentYear = weekStartDateLocal.getFullYear();
   const vsLastYear = balance - (lastYearBalance ?? 0);
 
   return (
@@ -88,6 +149,26 @@ export function FinanceView() {
           </select>
           <CaretDownIcon className={uiStyles.selectCaret} />
         </div>
+      </div>
+
+      <CapitalSection
+        walletBalance={summary.walletBalance}
+        creditCards={creditCards}
+        currencySymbol={currencySymbol}
+        onSaveWallet={handleSaveWallet}
+        onCreateCard={handleCreateCreditCard}
+        onSaveCard={handleSaveCreditCard}
+        onDeleteCard={handleDeleteCreditCard}
+      />
+
+      <div className={styles.week1AnchorRow}>
+        <span className={styles.week1AnchorLabel}>Semana 1 empieza</span>
+        <input
+          type="date"
+          className={styles.week1AnchorInput}
+          defaultValue={summary.week1AnchorDate ?? ''}
+          onBlur={(event) => handleWeek1AnchorCommit(event.target.value)}
+        />
       </div>
 
       <div className={uiStyles.periodNav}>
@@ -128,7 +209,7 @@ export function FinanceView() {
             </p>
             <p className={uiStyles.cardNote}>
               Ingresos {currencySymbol}
-              {summary.totalIncome.toLocaleString('es-MX')} · Gastos {currencySymbol}
+              {summary.totalIncome.toLocaleString('es-MX')} · Gastos (Gastos diarios) {currencySymbol}
               {summary.totalExpense.toLocaleString('es-MX')}
             </p>
           </div>
@@ -188,7 +269,7 @@ export function FinanceView() {
                 Ingresos · {currencySymbol}
                 {summary.totalIncome.toLocaleString('es-MX')}
               </span>
-              <button type="button" className={uiStyles.iconOnlyButton} onClick={() => setAddModal('income')} aria-label="Nuevo ingreso">
+              <button type="button" className={uiStyles.iconOnlyButton} onClick={() => setAddModalOpen(true)} aria-label="Nuevo ingreso">
                 <PlusIcon />
               </button>
             </div>
@@ -197,6 +278,12 @@ export function FinanceView() {
                 key={entry.id}
                 name={entry.name}
                 amount={entry.amount}
+                recurrence={entry.recurrence}
+                recurrenceOptions={RECURRENCE_SELECT_OPTIONS}
+                onRecurrenceCommit={async (recurrence) => {
+                  await financeApi.updateEntry(entry.id, { recurrence }, accessToken);
+                  load();
+                }}
                 onNameCommit={async (name) => {
                   await financeApi.updateEntry(entry.id, { name }, accessToken);
                   load();
@@ -213,44 +300,20 @@ export function FinanceView() {
             ))}
           </div>
 
-          <div>
-            <div className={uiStyles.sectionHeader}>
-              <span className={uiStyles.sectionLabel}>
-                Gastos · {currencySymbol}
-                {summary.totalExpense.toLocaleString('es-MX')}
-              </span>
-              <button type="button" className={uiStyles.iconOnlyButton} onClick={() => setAddModal('expense')} aria-label="Nuevo gasto">
-                <PlusIcon />
-              </button>
-            </div>
-            {summary.expense.map((entry) => (
-              <EditableMoneyRow
-                key={entry.id}
-                name={entry.name}
-                amount={entry.amount}
-                onNameCommit={async (name) => {
-                  await financeApi.updateEntry(entry.id, { name }, accessToken);
-                  load();
-                }}
-                onAmountCommit={async (amount) => {
-                  await financeApi.updateEntry(entry.id, { amount }, accessToken);
-                  load();
-                }}
-                onDelete={async () => {
-                  await financeApi.deleteEntry(entry.id, accessToken);
-                  load();
-                }}
-              />
-            ))}
-          </div>
+          <AnnualIncomeSection
+            entries={annualIncome}
+            currencySymbol={currencySymbol}
+            onSave={handleSaveAnnualIncome}
+            onDelete={handleDeleteAnnualIncome}
+          />
         </div>
       </div>
 
-      {addModal && (
+      {isAddModalOpen && (
         <AddMoneyModal
-          title={addModal === 'income' ? 'Nuevo ingreso' : 'Nuevo gasto'}
+          title="Nuevo ingreso"
           currencySymbol={currencySymbol}
-          onClose={() => setAddModal(null)}
+          onClose={() => setAddModalOpen(false)}
           onCreate={handleCreate}
         />
       )}
