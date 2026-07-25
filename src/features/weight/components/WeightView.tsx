@@ -2,7 +2,15 @@
 
 import { KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
-import { CaretDownIcon, MinusIcon, PencilIcon, TrendDownIcon, TrendUpIcon } from '../../../shared/components/icons/icons';
+import {
+  BarbellIcon,
+  CaretDownIcon,
+  MinusIcon,
+  PencilIcon,
+  ScaleIcon,
+  TrendDownIcon,
+  TrendUpIcon,
+} from '../../../shared/components/icons/icons';
 import { weightApi } from '../services/weight.api';
 import { WeightGoalDirection, WeightYearExtreme, WeightYearSummary } from '../types/weight.types';
 import { formatDelta, formatKg } from '../utils/format';
@@ -11,6 +19,9 @@ import styles from './weight.module.css';
 import { WeightExtremesChart } from './WeightExtremesChart';
 import { WeightNoteModal } from './WeightNoteModal';
 import { WeightTrendChart } from './WeightTrendChart';
+import { WorkoutsTab } from './WorkoutsTab';
+
+type PesoTab = 'peso' | 'entrenamientos';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -30,6 +41,7 @@ function commitOnEnter(event: KeyboardEvent<HTMLInputElement>) {
 
 export function WeightView() {
   const { accessToken } = useAuth();
+  const [tab, setTab] = useState<PesoTab>('peso');
   const [year, setYear] = useState(CURRENT_YEAR);
   const [summary, setSummary] = useState<WeightYearSummary | null>(null);
   const [extremes, setExtremes] = useState<WeightYearExtreme[]>([]);
@@ -119,22 +131,37 @@ export function WeightView() {
           <h1 className={uiStyles.pageTitle}>Peso</h1>
           <p className={uiStyles.pageSubtitle}>Registro mensual</p>
         </div>
-        <div className={uiStyles.selectWrap}>
-          <select
-            className={uiStyles.select}
-            value={year}
-            onChange={(event) => setYear(Number(event.target.value))}
-          >
-            {YEARS.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-          <CaretDownIcon className={uiStyles.selectCaret} />
-        </div>
+        {tab === 'peso' && (
+          <div className={uiStyles.selectWrap}>
+            <select
+              className={uiStyles.select}
+              value={year}
+              onChange={(event) => setYear(Number(event.target.value))}
+            >
+              {YEARS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+            <CaretDownIcon className={uiStyles.selectCaret} />
+          </div>
+        )}
       </div>
 
+      <div className={styles.pesoTabToggle}>
+        <button type="button" data-selected={tab === 'peso'} onClick={() => setTab('peso')}>
+          <ScaleIcon width={13} height={13} /> Registro de peso
+        </button>
+        <button type="button" data-selected={tab === 'entrenamientos'} onClick={() => setTab('entrenamientos')}>
+          <BarbellIcon width={13} height={13} /> Entrenamientos
+        </button>
+      </div>
+
+      {tab === 'entrenamientos' ? (
+        <WorkoutsTab />
+      ) : (
+        <>
       <div className={uiStyles.metricGrid2}>
         <div className={uiStyles.card}>
           <p className={uiStyles.cardLabel}>Peso actual</p>
@@ -250,6 +277,8 @@ export function WeightView() {
           onClose={() => setNoteModalMonth(null)}
           onSave={handleSaveNote}
         />
+      )}
+        </>
       )}
     </div>
   );

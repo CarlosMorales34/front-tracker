@@ -182,6 +182,66 @@ export function ReceiptIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function BarbellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M2 10v4M5 8v8M19 8v8M22 10v4" />
+      <path d="M5 12h14" />
+      <rect x="4.2" y="9" width="1.6" height="6" rx="0.5" fill="currentColor" stroke="none" />
+      <rect x="18.2" y="9" width="1.6" height="6" rx="0.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function EyeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a13.4 13.4 0 0 1-3.1 3.9M6.5 6.6C3.7 8.4 1.5 12 1.5 12s3.5 7 10.5 7a10.3 10.3 0 0 0 4.2-.9" />
+      <path d="M9.9 14.1a3 3 0 0 0 4.2-4.2" />
+      <path d="M2 2l20 20" />
+    </svg>
+  );
+}
+
 export function ScaleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
