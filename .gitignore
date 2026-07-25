@@ -13,3 +13,4 @@ credentials.json
 .DS_Store
 .arch-index/
 *.tsbuildinfo
+*.vscode

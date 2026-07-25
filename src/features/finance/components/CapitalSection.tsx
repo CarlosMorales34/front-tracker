@@ -44,7 +44,7 @@ export function CapitalSection({
         </span>
         <span className={styles.capitalTotals}>
           <span>
-            Liquidez {currencySymbol}
+            Presupuesto {currencySymbol}
             {walletBalance.toLocaleString('es-MX')}
           </span>
           <span>
@@ -57,13 +57,14 @@ export function CapitalSection({
       {!isCollapsed && (
         <div className={styles.capitalBody}>
           <div className={uiStyles.card}>
-            <p className={uiStyles.cardLabel}>Liquidez (efectivo / débito)</p>
+            <p className={uiStyles.cardLabel}>Presupuesto (liquidez)</p>
             <p className={uiStyles.bigStat}>
               {currencySymbol}
               {walletBalance.toLocaleString('es-MX')}
             </p>
             <p className={uiStyles.cardNote}>
-              Se ajusta sola al registrar ingresos y gastos. Corrígela a mano si contaste tu dinero real.
+              Se descuenta solo al registrar un gasto y suma solo al registrar un ingreso. Corrígelo a mano si
+              contaste tu dinero real.
             </p>
             <div className={styles.debtRow}>
               <span className={styles.debtRowLabel}>Corregir presupuesto</span>

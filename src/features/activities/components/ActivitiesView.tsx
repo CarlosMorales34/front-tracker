@@ -82,7 +82,9 @@ function buildProductiveHoursByDay(logs: ActivityLog[]): number[] {
 export function ActivitiesView() {
   const { accessToken } = useAuth();
   const [tab, setTab] = useState<ActivitiesTab>('hoy');
-  const [selectedDateIso, setSelectedDateIso] = useState(DAY_CHIPS[0]?.dateIso ?? '');
+  const [selectedDateIso, setSelectedDateIso] = useState(
+    () => DAY_CHIPS.find((day) => day.dateIso === getTodayIso())?.dateIso ?? DAY_CHIPS[0]?.dateIso ?? '',
+  );
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);

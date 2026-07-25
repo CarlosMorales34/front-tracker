@@ -21,9 +21,9 @@ export function StatsRow({
     if (currentWeightKg === null) return '';
     const diff = Math.abs(currentWeightKg - weightGoalKg);
     return currentWeightKg > weightGoalKg
-      ? `Meta ${weightGoalKg} kg · faltan ${diff} kg`
+      ? `Meta ${weightGoalKg} kg · faltan ${diff.toFixed(2)} kg`
       : currentWeightKg < weightGoalKg
-        ? `Meta ${weightGoalKg} kg · faltan ${diff} kg`
+        ? `Meta ${weightGoalKg} kg · faltan ${diff.toFixed(2)} kg`
         : `Meta ${weightGoalKg} kg · alcanzada`;
   })();
 
