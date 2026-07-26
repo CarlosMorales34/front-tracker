@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
-import { AppleIcon, CompassIcon, GoogleIcon } from '../../../shared/components/icons/icons';
+import { AppleIcon, CompassIcon } from '../../../shared/components/icons/icons';
 import { useAuth } from '../context/AuthContext';
 import { AuthButton } from './AuthButton';
 import { AuthInput } from './AuthInput';
+import { GoogleSignInButton } from './GoogleSignInButton';
 import styles from './auth.module.css';
 
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,10 +35,20 @@ export function LoginForm() {
     }
   };
 
-  // No hay OAuth configurado todavía: en vez de fingir un login o dejar el
-  // botón roto, mostramos un aviso y no navegamos a ningún lado.
+  // No hay OAuth de Apple configurado todavía: en vez de fingir un login o
+  // dejar el botón roto, mostramos un aviso y no navegamos a ningún lado.
   const handleOauthClick = (provider: string) => {
     setOauthNotice(`Continuar con ${provider} estará disponible próximamente.`);
+  };
+
+  const handleGoogleCredential = async (idToken: string) => {
+    setError(null);
+    try {
+      await loginWithGoogle(idToken);
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar sesión con Google.');
+    }
   };
 
   return (
@@ -84,9 +95,7 @@ export function LoginForm() {
       </div>
 
       <div className={styles.oauthGroup}>
-        <AuthButton type="button" variant="outline" onClick={() => handleOauthClick('Google')}>
-          <GoogleIcon /> Continuar con Google
-        </AuthButton>
+        <GoogleSignInButton onCredential={handleGoogleCredential} onError={setError} />
         <AuthButton type="button" variant="outline" onClick={() => handleOauthClick('Apple')}>
           <AppleIcon /> Continuar con Apple
         </AuthButton>

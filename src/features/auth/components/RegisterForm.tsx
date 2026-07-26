@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
-import { AppleIcon, CompassIcon, GoogleIcon } from '../../../shared/components/icons/icons';
+import { AppleIcon, CompassIcon } from '../../../shared/components/icons/icons';
 import { useAuth } from '../context/AuthContext';
 import { AuthButton } from './AuthButton';
 import { AuthInput } from './AuthInput';
+import { GoogleSignInButton } from './GoogleSignInButton';
 import styles from './auth.module.css';
 
 export function RegisterForm() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,6 +38,16 @@ export function RegisterForm() {
 
   const handleOauthClick = (provider: string) => {
     setOauthNotice(`Continuar con ${provider} estará disponible próximamente.`);
+  };
+
+  const handleGoogleCredential = async (idToken: string) => {
+    setError(null);
+    try {
+      await loginWithGoogle(idToken);
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear la cuenta con Google.');
+    }
   };
 
   return (
@@ -93,9 +104,7 @@ export function RegisterForm() {
       </div>
 
       <div className={styles.oauthGroup}>
-        <AuthButton type="button" variant="outline" onClick={() => handleOauthClick('Google')}>
-          <GoogleIcon /> Continuar con Google
-        </AuthButton>
+        <GoogleSignInButton onCredential={handleGoogleCredential} onError={setError} />
         <AuthButton type="button" variant="outline" onClick={() => handleOauthClick('Apple')}>
           <AppleIcon /> Continuar con Apple
         </AuthButton>

@@ -22,6 +22,12 @@ export const authApi = {
       withCredentials({ method: 'POST', body: JSON.stringify(input) })
     ),
 
+  google: (idToken: string): Promise<AuthResponse> =>
+    apiFetch<AuthResponse>(
+      '/api/auth/google',
+      withCredentials({ method: 'POST', body: JSON.stringify({ idToken }) })
+    ),
+
   refresh: (): Promise<RefreshResponse> =>
     apiFetch<RefreshResponse>('/api/auth/refresh', withCredentials({ method: 'POST' })),
 

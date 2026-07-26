@@ -5,6 +5,7 @@ export interface User {
   // El backend solo lo manda en el response de /register; en /login y en
   // el user derivado del accessToken (ver AuthContext) puede no venir.
   createdAt?: string;
+  avatarUrl?: string | null;
 }
 
 export interface LoginInput {
