@@ -28,7 +28,7 @@ export function AddMoneyModal({ title, currencySymbol, onClose, onCreate }: AddM
 
   return (
     <Modal title={title} onClose={onClose}>
-      <form onSubmit={handleSubmit} className={styles.modalForm}>
+      <form onSubmit={handleSubmit} className={styles.modalForm} data-tour="money-modal-form">
         <label className={styles.modalLabel}>
           Concepto
           <input
@@ -37,6 +37,7 @@ export function AddMoneyModal({ title, currencySymbol, onClose, onCreate }: AddM
             onChange={(event) => setName(event.target.value)}
             placeholder="Ej. Sueldo"
             autoFocus
+            data-tour="money-name-input"
           />
         </label>
         <label className={styles.modalLabel}>
@@ -48,6 +49,7 @@ export function AddMoneyModal({ title, currencySymbol, onClose, onCreate }: AddM
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             placeholder="0"
+            data-tour="money-amount-input"
           />
         </label>
         <label className={styles.modalLabel}>

@@ -12,11 +12,11 @@ export function BottomTabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className={styles.tabBar}>
+    <nav className={styles.tabBar} data-tour-scope="mobile-nav">
       {NAV_ITEMS.map(({ href, shortLabel, icon: Icon }) => {
         const isActive = pathname === href;
         return (
-          <Link key={href} href={href} className={styles.tab} data-active={isActive}>
+          <Link key={href} href={href} className={styles.tab} data-active={isActive} data-tour={`nav-${href}`}>
             <Icon width={20} height={20} />
             <span>{shortLabel}</span>
           </Link>

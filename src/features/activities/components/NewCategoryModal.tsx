@@ -22,7 +22,7 @@ export function NewCategoryModal({ onClose, onCreate }: NewCategoryModalProps) {
 
   return (
     <Modal title="Nueva categoría" onClose={onClose}>
-      <form onSubmit={handleSubmit} className={styles.modalForm}>
+      <form onSubmit={handleSubmit} className={styles.modalForm} data-tour="category-modal-form">
         <label className={styles.modalLabel}>
           Nombre
           <input
@@ -31,6 +31,7 @@ export function NewCategoryModal({ onClose, onCreate }: NewCategoryModalProps) {
             onChange={(event) => setName(event.target.value)}
             placeholder="Ej. Salud mental"
             autoFocus
+            data-tour="category-name-input"
           />
         </label>
 

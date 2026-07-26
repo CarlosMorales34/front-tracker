@@ -14,7 +14,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={styles.sidebar} data-tour-scope="desktop-nav">
       <div className={styles.brand}>
         <div className={styles.brandIcon}>
           <CompassIcon width={22} height={22} />
@@ -26,7 +26,7 @@ export function Sidebar() {
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
-            <Link key={href} href={href} className={styles.navItem} data-active={isActive}>
+            <Link key={href} href={href} className={styles.navItem} data-active={isActive} data-tour={`nav-${href}`}>
               <Icon width={19} height={19} />
               <span>{label}</span>
             </Link>
@@ -36,7 +36,12 @@ export function Sidebar() {
 
       <div className={styles.footer}>
         <div className={styles.footerRow}>
-          <Link href="/ajustes" className={styles.navItem} data-active={pathname === '/ajustes'}>
+          <Link
+            href="/ajustes"
+            className={styles.navItem}
+            data-active={pathname === '/ajustes'}
+            data-tour="nav-/ajustes"
+          >
             <SettingsIcon width={19} height={19} />
             <span>Ajustes</span>
           </Link>

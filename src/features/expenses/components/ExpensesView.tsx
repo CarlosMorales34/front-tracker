@@ -90,7 +90,7 @@ export function ExpensesView() {
         <p className={uiStyles.pageSubtitle}>Alimenta el gasto semanal y mensual de Finanzas</p>
       </div>
 
-      <div className={uiStyles.metricGrid3}>
+      <div className={uiStyles.metricGrid3} data-tour="gastos-summary">
         <div className={uiStyles.card}>
           <p className={uiStyles.cardLabel}>Ingresos del mes</p>
           <p className={uiStyles.midStat}>
@@ -136,7 +136,13 @@ export function ExpensesView() {
             Gastos de hoy · {currencySymbol}
             {todayTotal.toLocaleString('es-MX')}
           </span>
-          <button type="button" className={uiStyles.iconOnlyButton} onClick={() => setDailyModalOpen(true)} aria-label="Nuevo gasto">
+          <button
+            type="button"
+            className={uiStyles.iconOnlyButton}
+            onClick={() => setDailyModalOpen(true)}
+            aria-label="Nuevo gasto"
+            data-tour="gastos-new-daily-button"
+          >
             <PlusIcon />
           </button>
         </div>
@@ -144,8 +150,8 @@ export function ExpensesView() {
           <p className={uiStyles.cardNote}>Sin gastos registrados hoy.</p>
         ) : (
           dailyExpenses.map((item) => (
+            <div key={item.id} data-tour="gastos-daily-row">
             <EditableMoneyRow
-              key={item.id}
               name={item.name}
               amount={item.amount}
               onNameCommit={async (name) => {
@@ -163,6 +169,7 @@ export function ExpensesView() {
                 load();
               }}
             />
+            </div>
           ))
         )}
       </div>

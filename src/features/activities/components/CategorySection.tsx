@@ -69,18 +69,24 @@ export function CategorySection({
       {!isCollapsed && (
         <div className={styles.plainList}>
           {activities.map((activity, index) => (
-            <ActivityRow
-              key={activity.id}
-              activity={activity}
-              canMoveUp={index > 0}
-              canMoveDown={index < activities.length - 1}
-              onMoveUp={() => onMoveActivity(activity.id, 'up')}
-              onMoveDown={() => onMoveActivity(activity.id, 'down')}
-              onSaveHours={(hours) => onSaveHours(activity.id, hours)}
-            />
+            <div key={activity.id} data-tour="activities-activity-row">
+              <ActivityRow
+                activity={activity}
+                canMoveUp={index > 0}
+                canMoveDown={index < activities.length - 1}
+                onMoveUp={() => onMoveActivity(activity.id, 'up')}
+                onMoveDown={() => onMoveActivity(activity.id, 'down')}
+                onSaveHours={(hours) => onSaveHours(activity.id, hours)}
+              />
+            </div>
           ))}
 
-          <button type="button" className={styles.addActivityButton} onClick={onAddActivityClick}>
+          <button
+            type="button"
+            className={styles.addActivityButton}
+            onClick={onAddActivityClick}
+            data-tour="activities-add-activity-button"
+          >
             <PlusIcon /> Nueva actividad
           </button>
         </div>

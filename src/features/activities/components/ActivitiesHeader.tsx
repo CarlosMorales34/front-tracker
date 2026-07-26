@@ -14,7 +14,9 @@ export function ActivitiesHeader({ dateRangeLabel, tab, onTabChange }: Activitie
         <h1 className={styles.pageTitle}>Actividades diarias</h1>
         <p className={styles.pageSubtitle}>{dateRangeLabel}</p>
       </div>
-      <HoySemanaToggle value={tab} onChange={onTabChange} />
+      <div data-tour="activities-toggle">
+        <HoySemanaToggle value={tab} onChange={onTabChange} />
+      </div>
     </div>
   );
 }

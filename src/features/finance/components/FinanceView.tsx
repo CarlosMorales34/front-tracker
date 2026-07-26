@@ -269,13 +269,19 @@ export function FinanceView() {
                 Ingresos · {currencySymbol}
                 {summary.totalIncome.toLocaleString('es-MX')}
               </span>
-              <button type="button" className={uiStyles.iconOnlyButton} onClick={() => setAddModalOpen(true)} aria-label="Nuevo ingreso">
+              <button
+                type="button"
+                className={uiStyles.iconOnlyButton}
+                onClick={() => setAddModalOpen(true)}
+                aria-label="Nuevo ingreso"
+                data-tour="finanzas-new-income-button"
+              >
                 <PlusIcon />
               </button>
             </div>
             {summary.income.map((entry) => (
+              <div key={entry.id} data-tour="finanzas-income-row">
               <EditableMoneyRow
-                key={entry.id}
                 name={entry.name}
                 amount={entry.amount}
                 recurrence={entry.recurrence}
@@ -297,6 +303,7 @@ export function FinanceView() {
                   load();
                 }}
               />
+              </div>
             ))}
           </div>
 

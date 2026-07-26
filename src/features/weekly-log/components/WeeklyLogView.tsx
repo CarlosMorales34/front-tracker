@@ -81,7 +81,7 @@ export function WeeklyLogView() {
   }
 
   return (
-    <div className={uiStyles.page}>
+    <div className={uiStyles.page} data-tour="weekly-content">
       <div className={uiStyles.pageHeader}>
         <div>
           <h1 className={uiStyles.pageTitle}>Registro semanal</h1>

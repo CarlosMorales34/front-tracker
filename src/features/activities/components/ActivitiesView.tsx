@@ -339,7 +339,12 @@ export function ActivitiesView() {
             ))
           )}
 
-          <button type="button" className={styles.outlineButton} onClick={() => setCategoryModalOpen(true)}>
+          <button
+            type="button"
+            className={styles.outlineButton}
+            onClick={() => setCategoryModalOpen(true)}
+            data-tour="activities-new-category-button"
+          >
             + Nueva categoría
           </button>
         </>

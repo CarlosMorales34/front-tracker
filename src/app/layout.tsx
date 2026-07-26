@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import { AuthProvider } from '../features/auth/context/AuthContext';
+import { OnboardingProvider } from '../features/onboarding/OnboardingProvider';
 import { ThemeProvider } from '../shared/theme/theme-context';
 import './globals.css';
 
@@ -39,7 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {THEME_INIT_SCRIPT}
         </Script>
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <OnboardingProvider>{children}</OnboardingProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

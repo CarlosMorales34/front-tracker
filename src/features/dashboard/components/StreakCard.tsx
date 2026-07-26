@@ -7,7 +7,7 @@ interface StreakCardProps {
 
 export function StreakCard({ days, hasData }: StreakCardProps) {
   return (
-    <section className={styles.card}>
+    <section className={styles.card} data-tour="dashboard-streak">
       <p className={styles.cardLabel}>Racha activa</p>
       {hasData ? (
         <p className={styles.bigStat}>

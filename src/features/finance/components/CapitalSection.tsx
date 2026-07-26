@@ -36,7 +36,7 @@ export function CapitalSection({
   const totalCapital = walletBalance + totalAvailableCredit;
 
   return (
-    <div className={uiStyles.card}>
+    <div className={uiStyles.card} data-tour="finanzas-capital">
       <button type="button" className={styles.capitalHeader} onClick={() => setIsCollapsed((prev) => !prev)}>
         <span className={styles.capitalHeaderLeft}>
           <CaretDownIcon className={styles.capitalCollapseIcon} data-collapsed={isCollapsed} />

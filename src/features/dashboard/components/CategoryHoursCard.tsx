@@ -7,7 +7,7 @@ import styles from './dashboard.module.css';
 export function CategoryHoursCard({ categories }: { categories: CategoryHours[] }) {
   if (categories.length === 0) {
     return (
-      <section className={styles.card}>
+      <section className={styles.card} data-tour="dashboard-category-hours">
         <p className={styles.cardLabel}>Horas por categoría</p>
         <p className={styles.cardNote}>
           Estamos conociéndote para ayudarte a mejorar. Crea categorías y registra actividades para ver esta
@@ -20,7 +20,7 @@ export function CategoryHoursCard({ categories }: { categories: CategoryHours[] 
   const max = Math.max(10, ...categories.map((c) => c.hours));
 
   return (
-    <section className={styles.card}>
+    <section className={styles.card} data-tour="dashboard-category-hours">
       <p className={styles.cardLabel}>Horas por categoría</p>
       <div className={styles.categoryList}>
         {categories.map((category) => (

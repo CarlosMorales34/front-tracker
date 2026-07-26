@@ -8,7 +8,7 @@ interface ProductivityCardProps {
 
 export function ProductivityCard({ percent, hasData }: ProductivityCardProps) {
   return (
-    <section className={styles.card}>
+    <section className={styles.card} data-tour="dashboard-productivity">
       <p className={styles.cardLabel}>Productividad de la semana</p>
       {hasData && percent !== null ? (
         <>

@@ -149,7 +149,7 @@ export function WeightView() {
         )}
       </div>
 
-      <div className={styles.pesoTabToggle}>
+      <div className={styles.pesoTabToggle} data-tour="peso-toggle">
         <button type="button" data-selected={tab === 'peso'} onClick={() => setTab('peso')}>
           <ScaleIcon width={13} height={13} /> Registro de peso
         </button>

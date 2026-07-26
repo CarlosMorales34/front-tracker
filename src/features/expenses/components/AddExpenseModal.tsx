@@ -24,7 +24,7 @@ export function AddExpenseModal({ title, currencySymbol, onClose, onCreate }: Ad
 
   return (
     <Modal title={title} onClose={onClose}>
-      <form onSubmit={handleSubmit} className={styles.modalForm}>
+      <form onSubmit={handleSubmit} className={styles.modalForm} data-tour="expense-modal-form">
         <label className={styles.modalLabel}>
           Concepto
           <input
@@ -33,6 +33,7 @@ export function AddExpenseModal({ title, currencySymbol, onClose, onCreate }: Ad
             onChange={(event) => setName(event.target.value)}
             placeholder="Ej. Café"
             autoFocus
+            data-tour="expense-name-input"
           />
         </label>
         <label className={styles.modalLabel}>
@@ -44,6 +45,7 @@ export function AddExpenseModal({ title, currencySymbol, onClose, onCreate }: Ad
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             placeholder="0"
+            data-tour="expense-amount-input"
           />
         </label>
         <div className={styles.modalActions}>

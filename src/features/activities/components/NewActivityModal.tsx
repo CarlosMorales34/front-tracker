@@ -21,7 +21,7 @@ export function NewActivityModal({ categoryName, onClose, onCreate }: NewActivit
 
   return (
     <Modal title={`Nueva actividad en ${categoryName}`} onClose={onClose}>
-      <form onSubmit={handleSubmit} className={styles.modalForm}>
+      <form onSubmit={handleSubmit} className={styles.modalForm} data-tour="activity-modal-form">
         <label className={styles.modalLabel}>
           Nombre
           <input
@@ -30,6 +30,7 @@ export function NewActivityModal({ categoryName, onClose, onCreate }: NewActivit
             onChange={(event) => setName(event.target.value)}
             placeholder="Ej. Journaling"
             autoFocus
+            data-tour="activity-name-input"
           />
         </label>
 
