@@ -185,6 +185,18 @@
   justify-content: space-between;
   gap: 0.6rem;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.workoutsWeekNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workoutsWeekNav > div {
+  text-align: center;
+  min-width: 110px;
 }
 
 .workoutsHeaderTitle {
@@ -406,6 +418,47 @@
 }
 
 /* --- Performance charts --- */
+
+.valueChipStrip {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  margin-top: 0.6rem;
+}
+
+.valueChip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 56px;
+  max-width: 100px;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+.valueChipLabel {
+  font-size: 0.62rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+.valueChipValue {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.valueChipUnit {
+  font-size: 0.6rem;
+  color: var(--color-text-secondary);
+}
 
 .exercisePicker {
   width: 100%;

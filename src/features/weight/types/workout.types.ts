@@ -27,9 +27,17 @@ export interface CreateWorkoutInput {
   exercises: CreateWorkoutExerciseInput[];
 }
 
+export interface SessionVolumeExercise {
+  name: string;
+  weight: number | null;
+  sets: number;
+  reps: number[];
+}
+
 export interface SessionVolumePoint {
   workoutDate: string;
   volume: number;
+  exercises: SessionVolumeExercise[];
 }
 
 export interface ExercisePerformanceSeries {

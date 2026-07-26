@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
-import { ClockIcon, PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
+import { CaretLeftIcon, ClockIcon, PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
-import { getCurrentWeekStartIso, formatWeekRangeLabel } from '../../../shared/lib/week';
+import { addWeeks, getCurrentWeekStartIso, formatWeekRangeLabel } from '../../../shared/lib/week';
 import { workoutApi } from '../services/workout.api';
 import { CreateWorkoutInput, Workout, WorkoutPerformance } from '../types/workout.types';
 import { formatDayLabel, formatDurationLabel, formatRepsLabel } from '../utils/workout-format';
@@ -14,11 +14,10 @@ import { WorkoutPerformanceSection } from './WorkoutPerformanceSection';
 
 export function WorkoutsTab() {
   const { accessToken } = useAuth();
+  const [weekStart, setWeekStart] = useState(getCurrentWeekStartIso());
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [performance, setPerformance] = useState<WorkoutPerformance | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
-
-  const weekStart = getCurrentWeekStartIso();
 
   const load = useCallback(async () => {
     const [weekWorkouts, workoutPerformance] = await Promise.all([
@@ -47,9 +46,28 @@ export function WorkoutsTab() {
   return (
     <div>
       <div className={styles.workoutsHeader}>
-        <div>
-          <p className={styles.workoutsHeaderTitle}>{formatWeekRangeLabel(weekStart)}</p>
-          <p className={styles.workoutsHeaderSubtitle}>{workouts.length} entrenamientos registrados</p>
+        <div className={styles.workoutsWeekNav}>
+          <button
+            type="button"
+            className={uiStyles.iconOnlyButton}
+            onClick={() => setWeekStart((d) => addWeeks(d, -1))}
+            aria-label="Semana anterior"
+          >
+            <CaretLeftIcon />
+          </button>
+          <div>
+            <p className={styles.workoutsHeaderTitle}>{formatWeekRangeLabel(weekStart)}</p>
+            <p className={styles.workoutsHeaderSubtitle}>{workouts.length} entrenamientos registrados</p>
+          </div>
+          <button
+            type="button"
+            className={uiStyles.iconOnlyButton}
+            onClick={() => setWeekStart((d) => addWeeks(d, 1))}
+            aria-label="Semana siguiente"
+            style={{ transform: 'scaleX(-1)' }}
+          >
+            <CaretLeftIcon />
+          </button>
         </div>
         <button type="button" className={styles.addWorkoutButton} onClick={() => setModalOpen(true)}>
           <PlusIcon /> Nuevo entrenamiento
