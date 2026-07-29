@@ -20,6 +20,7 @@ export function ExpensesView() {
   const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
   const [fixedExpenses, setFixedExpenses] = useState<FixedMonthlyExpense[]>([]);
   const [summary, setSummary] = useState<ExpensesSummary | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isDailyModalOpen, setDailyModalOpen] = useState(false);
   const [isFixedModalOpen, setFixedModalOpen] = useState(false);
@@ -37,6 +38,7 @@ export function ExpensesView() {
       setFixedExpenses(fixed);
       setSummary(expensesSummary);
       setCurrencySymbol(financeSettings.currency === 'USD' ? 'US$' : '$');
+      setWalletBalance(financeSettings.walletBalance);
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +94,13 @@ export function ExpensesView() {
 
       <div className={uiStyles.metricGrid3} data-tour="gastos-summary">
         <div className={uiStyles.card}>
+          <p className={uiStyles.cardLabel}>Presupuesto</p>
+          <p className={uiStyles.midStat}>
+            {currencySymbol}
+            {walletBalance.toLocaleString('es-MX')}
+          </p>
+        </div>
+        <div className={uiStyles.card}>
           <p className={uiStyles.cardLabel}>Ingresos del mes</p>
           <p className={uiStyles.midStat}>
             {currencySymbol}
@@ -103,13 +112,6 @@ export function ExpensesView() {
           <p className={uiStyles.midStat}>
             {currencySymbol}
             {summary.monthExpenseTotal.toLocaleString('es-MX')}
-          </p>
-        </div>
-        <div className={uiStyles.card}>
-          <p className={uiStyles.cardLabel}>Sobrante</p>
-          <p className={uiStyles.midStat} style={{ color: 'var(--color-accent)' }}>
-            {currencySymbol}
-            {summary.sobrante.toLocaleString('es-MX')}
           </p>
         </div>
       </div>

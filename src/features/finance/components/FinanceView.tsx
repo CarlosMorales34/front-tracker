@@ -6,6 +6,7 @@ import { CaretDownIcon, CaretLeftIcon, PlusIcon, WarningIcon } from '../../../sh
 import { EditableMoneyRow } from '../../../shared/components/ui/EditableMoneyRow';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { addWeeks, formatWeekRangeLabel, getCurrentWeekStartIso, getWeekNumberForYear } from '../../../shared/lib/week';
+import { expensesApi } from '../../expenses/services/expenses.api';
 import { creditCardsApi } from '../services/credit-cards.api';
 import { financeApi } from '../services/finance.api';
 import {
@@ -31,22 +32,25 @@ export function FinanceView() {
   const { accessToken } = useAuth();
   const [weekStartDate, setWeekStartDate] = useState(getCurrentWeekStartIso());
   const [summary, setSummary] = useState<FinanceWeekSummary | null>(null);
+  const [sobrante, setSobrante] = useState(0);
   const [lastYearBalance, setLastYearBalance] = useState<number | null>(null);
   const [annualIncome, setAnnualIncome] = useState<FinanceAnnualIncome[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
 
   const load = useCallback(async () => {
-    const [current, lastYear, annualIncomeRes, creditCardsRes] = await Promise.all([
+    const [current, lastYear, annualIncomeRes, creditCardsRes, expensesSummary] = await Promise.all([
       financeApi.getWeekSummary(weekStartDate, accessToken),
       financeApi.getWeekSummary(addWeeks(weekStartDate, -52), accessToken),
       financeApi.getAnnualIncome(accessToken),
       creditCardsApi.list(accessToken),
+      expensesApi.getSummary(weekStartDate, accessToken),
     ]);
     setSummary(current);
     setLastYearBalance(lastYear.totalIncome - lastYear.totalExpense);
     setAnnualIncome(annualIncomeRes);
     setCreditCards(creditCardsRes);
+    setSobrante(expensesSummary.sobrante);
   }, [weekStartDate, accessToken]);
 
   useEffect(() => {
@@ -201,17 +205,27 @@ export function FinanceView() {
 
       <div className={styles.twoCol}>
         <div className={styles.colStack}>
-          <div className={uiStyles.card}>
-            <p className={uiStyles.cardLabel}>Balance de la semana</p>
-            <p className={uiStyles.bigStat} style={{ color: balance >= 0 ? 'var(--color-accent)' : 'var(--color-text)' }}>
-              {currencySymbol}
-              {balance.toLocaleString('es-MX')}
-            </p>
-            <p className={uiStyles.cardNote}>
-              Ingresos {currencySymbol}
-              {summary.totalIncome.toLocaleString('es-MX')} · Gastos (Gastos diarios) {currencySymbol}
-              {summary.totalExpense.toLocaleString('es-MX')}
-            </p>
+          <div className={uiStyles.metricGrid2}>
+            <div className={uiStyles.card}>
+              <p className={uiStyles.cardLabel}>Balance de la semana</p>
+              <p className={uiStyles.bigStat} style={{ color: balance >= 0 ? 'var(--color-accent)' : 'var(--color-text)' }}>
+                {currencySymbol}
+                {balance.toLocaleString('es-MX')}
+              </p>
+              <p className={uiStyles.cardNote}>
+                Ingresos {currencySymbol}
+                {summary.totalIncome.toLocaleString('es-MX')} · Gastos (Gastos diarios) {currencySymbol}
+                {summary.totalExpense.toLocaleString('es-MX')}
+              </p>
+            </div>
+            <div className={uiStyles.card}>
+              <p className={uiStyles.cardLabel}>Sobrante</p>
+              <p className={uiStyles.bigStat} style={{ color: sobrante >= 0 ? 'var(--color-accent)' : 'var(--color-text)' }}>
+                {currencySymbol}
+                {sobrante.toLocaleString('es-MX')}
+              </p>
+              <p className={uiStyles.cardNote}>Presupuesto menos gastos del mes (Gastos diarios)</p>
+            </div>
           </div>
 
           <div className={uiStyles.metricGrid2}>
