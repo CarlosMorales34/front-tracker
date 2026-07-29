@@ -1,7 +1,7 @@
 import { KeyboardEvent, useState } from 'react';
-import { CaretDownIcon, ClockIcon, CloseIcon, PencilIcon, PlusIcon } from '../../../shared/components/icons/icons';
-import { Activity, Category } from '../types/activities.types';
-import { computeDurationHours, formatHours, sumHours } from '../utils/hours';
+import { CaretDownIcon, ClockIcon, CloseIcon, PencilIcon, PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
+import { Activity, ActivityTimeRange, Category } from '../types/activities.types';
+import { formatHours, sumHours } from '../utils/hours';
 import styles from './activities.module.css';
 
 interface CategorySectionProps {
@@ -14,7 +14,7 @@ interface CategorySectionProps {
   canMoveCategoryDown: boolean;
   onMoveCategory: (direction: 'up' | 'down') => void;
   onMoveActivity: (activityId: string, direction: 'up' | 'down') => void;
-  onSaveHours: (activityId: string, hours: number | null) => Promise<void>;
+  onSaveTimes: (activityId: string, times: { start: string; end: string }[]) => Promise<void>;
 }
 
 export function CategorySection({
@@ -27,7 +27,7 @@ export function CategorySection({
   canMoveCategoryDown,
   onMoveCategory,
   onMoveActivity,
-  onSaveHours,
+  onSaveTimes,
 }: CategorySectionProps) {
   const totalToday = sumHours(activities.map((activity) => activity.todayHours));
 
@@ -76,7 +76,7 @@ export function CategorySection({
                 canMoveDown={index < activities.length - 1}
                 onMoveUp={() => onMoveActivity(activity.id, 'up')}
                 onMoveDown={() => onMoveActivity(activity.id, 'down')}
-                onSaveHours={(hours) => onSaveHours(activity.id, hours)}
+                onSaveTimes={(times) => onSaveTimes(activity.id, times)}
               />
             </div>
           ))}
@@ -101,40 +101,66 @@ function commitOnEnter(event: KeyboardEvent<HTMLInputElement>) {
   }
 }
 
-// Igual criterio que RoutineRow: el editor de horas cae en su propia línea
-// (no se aprieta junto al nombre en mobile), guarda con Enter o al perder
-// foco, y las horas se calculan a partir del rango start/end (no se
-// persisten los horarios en sí -- activity_logs solo guarda `hours`).
+interface DraftTime {
+  start: string;
+  end: string;
+}
+
+// Solo los turnos manuales entran al editor -- los reflejados de una rutina
+// vinculada (source='routine') se muestran aparte, de solo lectura, porque
+// se editan desde la rutina (ver RoutineRow) y no desde acá.
+function toManualDraft(times: ActivityTimeRange[]): DraftTime[] {
+  const manual = times.filter((time) => time.source === 'manual').map((time) => ({ start: time.start, end: time.end }));
+  return manual.length === 0 ? [{ start: '', end: '' }] : manual;
+}
+
+// Mismo criterio que RoutineRow: una actividad puede tener varios turnos por
+// día (ej. Entretenimiento 13:00-14:00 y 19:00-21:00), el editor guarda con
+// Enter o al perder foco, y el total se recalcula del lado del servidor a
+// partir de todos los turnos (manuales + los que llegan de una rutina
+// vinculada, si aplica).
 function ActivityRow({
   activity,
   canMoveUp,
   canMoveDown,
   onMoveUp,
   onMoveDown,
-  onSaveHours,
+  onSaveTimes,
 }: {
   activity: Activity;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
-  onSaveHours: (hours: number | null) => Promise<void>;
+  onSaveTimes: (times: { start: string; end: string }[]) => Promise<void>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
+  const [draft, setDraft] = useState<DraftTime[]>(() => toManualDraft(activity.todayTimes));
+
+  const routineTimes = activity.todayTimes.filter((time) => time.source === 'routine');
 
   const openEditor = () => {
-    setStart('');
-    setEnd('');
+    setDraft(toManualDraft(activity.todayTimes));
     setIsEditing(true);
   };
 
-  const save = (nextStart: string, nextEnd: string) => {
-    if (!nextStart || !nextEnd) return;
-    const hours = computeDurationHours(nextStart, nextEnd);
-    if (hours === null) return;
-    void onSaveHours(hours);
+  const updateRow = (index: number, field: keyof DraftTime, value: string) => {
+    setDraft((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, [field]: value } : row)));
+  };
+
+  const cleanedTimes = (rows: DraftTime[]): { start: string; end: string }[] =>
+    rows.filter((row) => row.start && row.end).map((row) => ({ start: row.start, end: row.end }));
+
+  const save = (rows: DraftTime[]) => {
+    void onSaveTimes(cleanedTimes(rows));
+  };
+
+  const addRow = () => setDraft((prev) => [...prev, { start: '', end: '' }]);
+
+  const removeRow = (index: number) => {
+    const next = draft.filter((_, rowIndex) => rowIndex !== index);
+    setDraft(next.length > 0 ? next : [{ start: '', end: '' }]);
+    save(next);
   };
 
   return (
@@ -161,11 +187,31 @@ function ActivityRow({
           </button>
         </div>
         <span className={styles.activityName}>{activity.name}</span>
+
         {!isEditing && (
-          <span className={styles.hoursBadge}>
-            {activity.todayHours !== null ? `${formatHours(activity.todayHours)}h` : '–'}
-          </span>
+          <div className={styles.routineTimes}>
+            {activity.todayTimes.length === 0 ? (
+              <span className={styles.routineTimeDash}>Sin horas registradas</span>
+            ) : (
+              <>
+                {activity.todayTimes.map((time, index) => (
+                  <div key={index} className={styles.routineTimeLine}>
+                    <span>{time.start}</span>
+                    <ClockIcon />
+                    <span className={styles.routineTimeDash}>–</span>
+                    <span>{time.end}</span>
+                    <ClockIcon />
+                    {time.source === 'routine' && (
+                      <span className={styles.cardNote}>({time.routineName})</span>
+                    )}
+                  </div>
+                ))}
+                <span className={styles.hoursBadge}>{formatHours(activity.todayHours)}h</span>
+              </>
+            )}
+          </div>
         )}
+
         <button
           type="button"
           className={styles.iconOnlyButton}
@@ -178,36 +224,55 @@ function ActivityRow({
 
       {isEditing && (
         <div className={styles.routineEditor}>
-          <div className={styles.routineEditorRow}>
-            <input
-              type="time"
-              className={styles.routineTimeInput}
-              value={start}
-              onChange={(event) => {
-                setStart(event.target.value);
-              }}
-              onBlur={() => save(start, end)}
-              onKeyDown={commitOnEnter}
-              aria-label={`Hora de inicio ${activity.name}`}
-            />
-            <span className={styles.routineTimeDash}>–</span>
-            <input
-              type="time"
-              className={styles.routineTimeInput}
-              value={end}
-              onChange={(event) => {
-                setEnd(event.target.value);
-              }}
-              onBlur={() => save(start, end)}
-              onKeyDown={commitOnEnter}
-              aria-label={`Hora de fin ${activity.name}`}
-            />
-            <ClockIcon />
-          </div>
+          {routineTimes.length > 0 && (
+            <p className={styles.cardNote}>
+              {routineTimes.map((time, index) => (
+                <span key={index}>
+                  {time.start}–{time.end} · {time.routineName} (vinculado, se edita desde la rutina)
+                  {index < routineTimes.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+            </p>
+          )}
+
+          {draft.map((row, index) => (
+            <div key={index} className={styles.routineEditorRow}>
+              <input
+                type="time"
+                className={styles.routineTimeInput}
+                value={row.start}
+                onChange={(event) => updateRow(index, 'start', event.target.value)}
+                onBlur={() => save(draft)}
+                onKeyDown={commitOnEnter}
+                aria-label={`Hora de inicio ${activity.name}`}
+              />
+              <span className={styles.routineTimeDash}>–</span>
+              <input
+                type="time"
+                className={styles.routineTimeInput}
+                value={row.end}
+                onChange={(event) => updateRow(index, 'end', event.target.value)}
+                onBlur={() => save(draft)}
+                onKeyDown={commitOnEnter}
+                aria-label={`Hora de fin ${activity.name}`}
+              />
+              {draft.length > 1 && (
+                <button
+                  type="button"
+                  className={styles.iconOnlyButton}
+                  onClick={() => removeRow(index)}
+                  aria-label="Quitar turno"
+                >
+                  <TrashIcon width={14} height={14} />
+                </button>
+              )}
+            </div>
+          ))}
+
           <div className={styles.routineEditorActions}>
-            <span className={styles.cardNote}>
-              {activity.todayHours !== null ? `Registrado: ${formatHours(activity.todayHours)}h` : 'Sin horas registradas'}
-            </span>
+            <button type="button" className={styles.routineAddTurnButton} onClick={addRow}>
+              <PlusIcon width={14} height={14} /> Agregar turno
+            </button>
             <button
               type="button"
               className={styles.iconOnlyButton}

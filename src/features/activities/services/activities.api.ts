@@ -1,5 +1,13 @@
 import { apiFetch } from '../../../shared/lib/api-client';
-import { Category, Activity, ActivityLog, FixedRoutine, RoutineType, RoutineTimeRange } from '../types/activities.types';
+import {
+  Category,
+  Activity,
+  ActivityLog,
+  ActivityTimeRange,
+  FixedRoutine,
+  RoutineType,
+  RoutineTimeRange,
+} from '../types/activities.types';
 
 function authHeaders(accessToken?: string | null): HeadersInit {
   return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
@@ -18,6 +26,7 @@ interface ActivityDto {
   name: string;
   sortOrder: number;
   todayHours?: number | null;
+  todayTimes?: ActivityTimeRange[];
 }
 
 interface RoutineDto {
@@ -25,6 +34,7 @@ interface RoutineDto {
   name: string;
   icon: string;
   type: RoutineType;
+  linkedActivityId?: string | null;
   sortOrder: number;
   times?: RoutineTimeRange[];
 }
@@ -32,10 +42,15 @@ interface RoutineDto {
 const withHours = (dto: ActivityDto): Activity => ({
   ...dto,
   todayHours: dto.todayHours ?? null,
+  todayTimes: dto.todayTimes ?? [],
   weekHours: [null, null, null, null, null, null, null],
 });
 
-const withTimes = (dto: RoutineDto): FixedRoutine => ({ ...dto, times: dto.times ?? [] });
+const withTimes = (dto: RoutineDto): FixedRoutine => ({
+  ...dto,
+  linkedActivityId: dto.linkedActivityId ?? null,
+  times: dto.times ?? [],
+});
 
 export const activitiesApi = {
   listCategories: (accessToken?: string | null): Promise<Category[]> =>
@@ -80,19 +95,20 @@ export const activitiesApi = {
   listActivityLogs: (from: string, to: string, accessToken?: string | null): Promise<ActivityLog[]> =>
     apiFetch<ActivityLog[]>(`/api/activity-logs?from=${from}&to=${to}`, { headers: authHeaders(accessToken) }),
 
+  // Reemplaza los turnos manuales de esa actividad para el día (los
+  // reflejados de una rutina vinculada no se tocan acá). Devuelve el total
+  // del día ya recalculado y el detalle completo (manuales + de rutina).
   putActivityLog: async (
     id: string,
     dateIso: string,
-    hours: number | null,
+    times: { start: string; end: string }[],
     accessToken?: string | null,
-  ): Promise<number | null> => {
-    const result = await apiFetch<{ hours: number | null }>(`/api/activities/${id}/log`, {
+  ): Promise<{ hours: number | null; times: ActivityTimeRange[] }> =>
+    apiFetch<{ hours: number | null; times: ActivityTimeRange[] }>(`/api/activities/${id}/log`, {
       method: 'PUT',
-      body: JSON.stringify({ date: dateIso, hours }),
+      body: JSON.stringify({ date: dateIso, times }),
       headers: authHeaders(accessToken),
-    });
-    return result.hours;
-  },
+    }),
 
   listRoutines: async (accessToken?: string | null, dateIso?: string): Promise<FixedRoutine[]> => {
     const query = dateIso ? `?date=${dateIso}` : '';
@@ -104,11 +120,12 @@ export const activitiesApi = {
     name: string,
     type: RoutineType,
     accessToken?: string | null,
-    icon = 'moon'
+    icon = 'moon',
+    linkedActivityId: string | null = null,
   ): Promise<FixedRoutine> => {
     const dto = await apiFetch<RoutineDto>('/api/fixed-routines', {
       method: 'POST',
-      body: JSON.stringify({ name, type, icon }),
+      body: JSON.stringify({ name, type, icon, linkedActivityId }),
       headers: authHeaders(accessToken),
     });
     return withTimes(dto);
@@ -116,7 +133,7 @@ export const activitiesApi = {
 
   updateRoutine: async (
     id: string,
-    changes: { name?: string; icon?: string; type?: RoutineType },
+    changes: { name?: string; icon?: string; type?: RoutineType; linkedActivityId?: string | null },
     accessToken?: string | null,
   ): Promise<FixedRoutine> => {
     const dto = await apiFetch<RoutineDto>(`/api/fixed-routines/${id}`, {

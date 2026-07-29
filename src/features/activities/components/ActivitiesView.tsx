@@ -32,7 +32,7 @@ const ZERO_WEEK = [0, 0, 0, 0, 0, 0, 0];
 const EMPTY_WEEK: (number | null)[] = [null, null, null, null, null, null, null];
 const COLLAPSED_CATEGORIES_STORAGE_KEY = 'vitalis.activities.collapsedCategories';
 
-type RoutineChanges = { name?: string; icon?: string; type?: RoutineType };
+type RoutineChanges = { name?: string; icon?: string; type?: RoutineType; linkedActivityId?: string | null };
 
 interface ComparisonStat {
   label: string;
@@ -199,8 +199,8 @@ export function ActivitiesView() {
     return totals;
   }, [categories, weeklyActivities]);
 
-  const handleCreateRoutine = async (name: string, type: RoutineType) => {
-    const created = await activitiesApi.createRoutine(name, type, accessToken);
+  const handleCreateRoutine = async (name: string, type: RoutineType, linkedActivityId: string | null) => {
+    const created = await activitiesApi.createRoutine(name, type, accessToken, 'moon', linkedActivityId);
     setRoutines((prev) => [...prev, created]);
     setRoutineModalOpen(false);
   };
@@ -221,14 +221,20 @@ export function ActivitiesView() {
     const updated = await activitiesApi.updateRoutine(id, changes, accessToken);
     setRoutines((prev) =>
       prev.map((routine) =>
-        routine.id === id ? { ...routine, name: updated.name, icon: updated.icon, type: updated.type } : routine,
+        routine.id === id
+          ? { ...routine, name: updated.name, icon: updated.icon, type: updated.type, linkedActivityId: updated.linkedActivityId }
+          : routine,
       ),
     );
   };
 
-  const handleSaveActivityHours = async (id: string, hours: number | null) => {
-    const saved = await activitiesApi.putActivityLog(id, selectedDateIso, hours, accessToken);
-    setActivities((prev) => prev.map((activity) => (activity.id === id ? { ...activity, todayHours: saved } : activity)));
+  const handleSaveActivityTimes = async (id: string, times: { start: string; end: string }[]) => {
+    const saved = await activitiesApi.putActivityLog(id, selectedDateIso, times, accessToken);
+    setActivities((prev) =>
+      prev.map((activity) =>
+        activity.id === id ? { ...activity, todayHours: saved.hours, todayTimes: saved.times } : activity,
+      ),
+    );
   };
 
   const handleCreateCategory = async (name: string, color: string) => {
@@ -312,6 +318,8 @@ export function ActivitiesView() {
 
           <RoutineSection
             routines={routines}
+            categories={categories}
+            activities={activities}
             selectedDateIso={selectedDateIso}
             onAddClick={() => setRoutineModalOpen(true)}
             onDelete={handleDeleteRoutine}
@@ -334,7 +342,7 @@ export function ActivitiesView() {
                 canMoveCategoryDown={index < categories.length - 1}
                 onMoveCategory={(direction) => handleMoveCategory(category.id, direction)}
                 onMoveActivity={(activityId, direction) => handleMoveActivity(category.id, activityId, direction)}
-                onSaveHours={handleSaveActivityHours}
+                onSaveTimes={handleSaveActivityTimes}
               />
             ))
           )}
@@ -365,7 +373,14 @@ export function ActivitiesView() {
         </>
       )}
 
-      {isRoutineModalOpen && <NewRoutineModal onClose={() => setRoutineModalOpen(false)} onCreate={handleCreateRoutine} />}
+      {isRoutineModalOpen && (
+        <NewRoutineModal
+          categories={categories}
+          activities={activities}
+          onClose={() => setRoutineModalOpen(false)}
+          onCreate={handleCreateRoutine}
+        />
+      )}
       {isCategoryModalOpen && (
         <NewCategoryModal onClose={() => setCategoryModalOpen(false)} onCreate={handleCreateCategory} />
       )}

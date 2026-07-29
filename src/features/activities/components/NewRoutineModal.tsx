@@ -1,25 +1,29 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { RoutineType } from '../types/activities.types';
+import { Activity, Category, RoutineType } from '../types/activities.types';
+import { ActivityLinkSelect } from './ActivityLinkSelect';
 import styles from './activities.module.css';
 import { Modal } from './Modal';
 
 interface NewRoutineModalProps {
+  categories: Category[];
+  activities: Activity[];
   onClose: () => void;
-  onCreate: (name: string, type: RoutineType) => void;
+  onCreate: (name: string, type: RoutineType, linkedActivityId: string | null) => void;
 }
 
-export function NewRoutineModal({ onClose, onCreate }: NewRoutineModalProps) {
+export function NewRoutineModal({ categories, activities, onClose, onCreate }: NewRoutineModalProps) {
   const [name, setName] = useState('');
   // Range por default: la mayoría de rutinas reales (Dormir, Trabajo) son
   // rangos de horas, no un instante único.
   const [type, setType] = useState<RoutineType>('range');
+  const [linkedActivityId, setLinkedActivityId] = useState<string | null>(null);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!name.trim()) return;
-    onCreate(name.trim(), type);
+    onCreate(name.trim(), type, linkedActivityId);
   };
 
   return (
@@ -42,7 +46,12 @@ export function NewRoutineModal({ onClose, onCreate }: NewRoutineModalProps) {
             type="button"
             className={styles.segmentedOption}
             data-selected={type === 'single'}
-            onClick={() => setType('single')}
+            onClick={() => {
+              setType('single');
+              // Un horario "single" no tiene hora de fin -> no hay duración
+              // que reflejar en una actividad.
+              setLinkedActivityId(null);
+            }}
           >
             Hora única
           </button>
@@ -55,6 +64,15 @@ export function NewRoutineModal({ onClose, onCreate }: NewRoutineModalProps) {
             Rango de horas
           </button>
         </div>
+
+        {type === 'range' && (
+          <ActivityLinkSelect
+            categories={categories}
+            activities={activities}
+            value={linkedActivityId}
+            onChange={setLinkedActivityId}
+          />
+        )}
 
         <div className={styles.modalActions}>
           <button type="button" className={styles.modalCancelButton} onClick={onClose}>

@@ -10,7 +10,7 @@ import {
   SunIcon,
   TrashIcon,
 } from '../../../shared/components/icons/icons';
-import { FixedRoutine, RoutineTimeRange, RoutineType } from '../types/activities.types';
+import { Activity, Category, FixedRoutine, RoutineTimeRange, RoutineType } from '../types/activities.types';
 import { computeDurationHours, formatHours, sumHours } from '../utils/hours';
 import styles from './activities.module.css';
 import { EditRoutineModal } from './EditRoutineModal';
@@ -21,17 +21,23 @@ const ROUTINE_ICONS: Record<string, typeof MoonIcon> = {
   briefcase: BriefcaseIcon,
 };
 
+type RoutineChanges = { name?: string; type?: RoutineType; linkedActivityId?: string | null };
+
 interface RoutineSectionProps {
   routines: FixedRoutine[];
+  categories: Category[];
+  activities: Activity[];
   selectedDateIso: string;
   onAddClick: () => void;
   onDelete: (id: string) => void;
   onSaveTimes: (id: string, times: RoutineTimeRange[]) => Promise<void>;
-  onUpdateRoutine: (id: string, changes: { name?: string; type?: RoutineType }) => Promise<void>;
+  onUpdateRoutine: (id: string, changes: RoutineChanges) => Promise<void>;
 }
 
 export function RoutineSection({
   routines,
+  categories,
+  activities,
   selectedDateIso,
   onAddClick,
   onDelete,
@@ -55,6 +61,9 @@ export function RoutineSection({
             <RoutineRow
               key={`${routine.id}-${selectedDateIso}`}
               routine={routine}
+              linkedActivityName={activities.find((activity) => activity.id === routine.linkedActivityId)?.name ?? null}
+              categories={categories}
+              activities={activities}
               onDelete={() => onDelete(routine.id)}
               onSaveTimes={(times) => onSaveTimes(routine.id, times)}
               onUpdateRoutine={(changes) => onUpdateRoutine(routine.id, changes)}
@@ -100,14 +109,20 @@ function totalDurationHours(times: RoutineTimeRange[]): number | null {
 // Peso), y "+ Agregar turno" solo aplica a type=range.
 function RoutineRow({
   routine,
+  linkedActivityName,
+  categories,
+  activities,
   onDelete,
   onSaveTimes,
   onUpdateRoutine,
 }: {
   routine: FixedRoutine;
+  linkedActivityName: string | null;
+  categories: Category[];
+  activities: Activity[];
   onDelete: () => void;
   onSaveTimes: (times: RoutineTimeRange[]) => Promise<void>;
-  onUpdateRoutine: (changes: { name?: string; type?: RoutineType }) => Promise<void>;
+  onUpdateRoutine: (changes: RoutineChanges) => Promise<void>;
 }) {
   const Icon = ROUTINE_ICONS[routine.icon] ?? MoonIcon;
   const [isEditing, setIsEditing] = useState(false);
@@ -157,6 +172,7 @@ function RoutineRow({
             <Icon width={20} height={20} />
           </span>
           <span className={styles.routineName}>{routine.name}</span>
+          {linkedActivityName && <span className={styles.cardNote}>→ {linkedActivityName}</span>}
         </div>
 
         {!isEditing && (
@@ -268,6 +284,8 @@ function RoutineRow({
       {isEditingRoutine && (
         <EditRoutineModal
           routine={routine}
+          categories={categories}
+          activities={activities}
           onClose={() => setIsEditingRoutine(false)}
           onSave={async (changes) => {
             await onUpdateRoutine(changes);
