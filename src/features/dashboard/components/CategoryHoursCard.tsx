@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CategoryHours } from '../types/dashboard.types';
 import { ProgressBar } from './ProgressBar';
 import styles from './dashboard.module.css';
@@ -7,20 +8,20 @@ import styles from './dashboard.module.css';
 export function CategoryHoursCard({ categories }: { categories: CategoryHours[] }) {
   if (categories.length === 0) {
     return (
-      <section className={styles.card} data-tour="dashboard-category-hours">
+      <Link href="/actividades" className={styles.card} data-tour="dashboard-category-hours">
         <p className={styles.cardLabel}>Horas por categoría</p>
         <p className={styles.cardNote}>
           Estamos conociéndote para ayudarte a mejorar. Crea categorías y registra actividades para ver esta
           sección.
         </p>
-      </section>
+      </Link>
     );
   }
 
   const max = Math.max(10, ...categories.map((c) => c.hours));
 
   return (
-    <section className={styles.card} data-tour="dashboard-category-hours">
+    <Link href="/actividades" className={styles.card} data-tour="dashboard-category-hours">
       <p className={styles.cardLabel}>Horas por categoría</p>
       <div className={styles.categoryList}>
         {categories.map((category) => (
@@ -33,6 +34,6 @@ export function CategoryHoursCard({ categories }: { categories: CategoryHours[] 
           </div>
         ))}
       </div>
-    </section>
+    </Link>
   );
 }

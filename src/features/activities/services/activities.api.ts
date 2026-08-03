@@ -147,6 +147,12 @@ export const activitiesApi = {
   deleteRoutine: (id: string, accessToken?: string | null): Promise<void> =>
     apiFetch<void>(`/api/fixed-routines/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
 
+  deleteCategory: (id: string, accessToken?: string | null): Promise<void> =>
+    apiFetch<void>(`/api/activity-categories/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
+
+  deleteActivity: (id: string, accessToken?: string | null): Promise<void> =>
+    apiFetch<void>(`/api/activities/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
+
   putRoutineLog: async (
     id: string,
     dateIso: string,
@@ -159,5 +165,21 @@ export const activitiesApi = {
       headers: authHeaders(accessToken),
     });
     return result.times;
+  },
+
+  getDailyFeedback: async (dateIso: string, accessToken?: string | null): Promise<string> => {
+    const result = await apiFetch<{ note: string }>(`/api/activities/feedback?date=${dateIso}`, {
+      headers: authHeaders(accessToken),
+    });
+    return result.note;
+  },
+
+  putDailyFeedback: async (dateIso: string, note: string, accessToken?: string | null): Promise<string> => {
+    const result = await apiFetch<{ note: string }>('/api/activities/feedback', {
+      method: 'PUT',
+      body: JSON.stringify({ date: dateIso, note }),
+      headers: authHeaders(accessToken),
+    });
+    return result.note;
   },
 };

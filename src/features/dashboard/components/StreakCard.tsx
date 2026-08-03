@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import styles from './dashboard.module.css';
 
 interface StreakCardProps {
@@ -7,7 +8,7 @@ interface StreakCardProps {
 
 export function StreakCard({ days, hasData }: StreakCardProps) {
   return (
-    <section className={styles.card} data-tour="dashboard-streak">
+    <Link href="/actividades" className={styles.card} data-tour="dashboard-streak">
       <p className={styles.cardLabel}>Racha activa</p>
       {hasData ? (
         <p className={styles.bigStat}>
@@ -18,6 +19,6 @@ export function StreakCard({ days, hasData }: StreakCardProps) {
           Estamos conociéndote para ayudarte a mejorar. Registra al menos una actividad hoy para empezar tu racha.
         </p>
       )}
-    </section>
+    </Link>
   );
 }

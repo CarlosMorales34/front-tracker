@@ -17,6 +17,7 @@ import { ActivitiesHeader } from './ActivitiesHeader';
 import styles from './activities.module.css';
 import { CategoryDistributionCard } from './CategoryDistributionCard';
 import { CategorySection } from './CategorySection';
+import { DailyFeedbackSection } from './DailyFeedbackSection';
 import { DayChipStrip } from './DayChipStrip';
 import { ActivitiesTab } from './HoySemanaToggle';
 import { NewActivityModal } from './NewActivityModal';
@@ -89,6 +90,7 @@ export function ActivitiesView() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [routines, setRoutines] = useState<FixedRoutine[]>([]);
+  const [feedbackNote, setFeedbackNote] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [collapsedCategoryIds, setCollapsedCategoryIds] = useState<Set<string>>(loadCollapsedCategoryIds);
 
@@ -118,12 +120,22 @@ export function ActivitiesView() {
     [accessToken],
   );
 
+  const loadFeedback = useCallback(
+    async (dateIso: string) => {
+      setFeedbackNote(await activitiesApi.getDailyFeedback(dateIso, accessToken));
+    },
+    [accessToken],
+  );
+
   useEffect(() => {
     if (!accessToken) return;
     setIsLoading(true);
-    Promise.all([loadCategories(), loadActivities(selectedDateIso), loadRoutines(selectedDateIso)]).finally(() =>
-      setIsLoading(false),
-    );
+    Promise.all([
+      loadCategories(),
+      loadActivities(selectedDateIso),
+      loadRoutines(selectedDateIso),
+      loadFeedback(selectedDateIso),
+    ]).finally(() => setIsLoading(false));
     // Solo al montar / cuando cambia el token -- el cambio de selectedDateIso
     // se maneja aparte (solo necesita refrescar actividades/rutinas, no categorías).
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,6 +145,7 @@ export function ActivitiesView() {
     if (!accessToken || isLoading) return;
     loadActivities(selectedDateIso);
     loadRoutines(selectedDateIso);
+    loadFeedback(selectedDateIso);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDateIso]);
 
@@ -250,6 +263,21 @@ export function ActivitiesView() {
     setActivityModalCategoryId(null);
   };
 
+  const handleSaveFeedback = async (note: string) => {
+    setFeedbackNote(await activitiesApi.putDailyFeedback(selectedDateIso, note, accessToken));
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    await activitiesApi.deleteCategory(categoryId, accessToken);
+    setCategories((prev) => prev.filter((category) => category.id !== categoryId));
+    setActivities((prev) => prev.filter((activity) => activity.categoryId !== categoryId));
+  };
+
+  const handleDeleteActivity = async (activityId: string) => {
+    await activitiesApi.deleteActivity(activityId, accessToken);
+    setActivities((prev) => prev.filter((activity) => activity.id !== activityId));
+  };
+
   const toggleCategoryCollapse = (categoryId: string) => {
     setCollapsedCategoryIds((prev) => {
       const next = new Set(prev);
@@ -343,6 +371,8 @@ export function ActivitiesView() {
                 onMoveCategory={(direction) => handleMoveCategory(category.id, direction)}
                 onMoveActivity={(activityId, direction) => handleMoveActivity(category.id, activityId, direction)}
                 onSaveTimes={handleSaveActivityTimes}
+                onDeleteCategory={() => handleDeleteCategory(category.id)}
+                onDeleteActivity={handleDeleteActivity}
               />
             ))
           )}
@@ -355,6 +385,8 @@ export function ActivitiesView() {
           >
             + Nueva categoría
           </button>
+
+          <DailyFeedbackSection key={selectedDateIso} note={feedbackNote} onSave={handleSaveFeedback} />
         </>
       ) : (
         <>

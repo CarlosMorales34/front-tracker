@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { TrendUpIcon } from '../../../shared/components/icons/icons';
 import { DashboardData } from '../types/dashboard.types';
 import { formatCurrency } from '../utils/format';
@@ -11,20 +12,20 @@ interface AnnualBalanceCardProps {
 export function AnnualBalanceCard({ annualBalance, hasData }: AnnualBalanceCardProps) {
   if (!hasData) {
     return (
-      <section className={styles.card}>
+      <Link href="/finanzas" className={styles.card}>
         <p className={styles.cardLabel}>Balance anual vs. años anteriores</p>
         <p className={styles.cardNote}>
           Estamos conociéndote para ayudarte a mejorar. Registra ingresos y gastos en Finanzas a lo largo del año
           para comparar contra años anteriores.
         </p>
-      </section>
+      </Link>
     );
   }
 
   const yearsLabel = annualBalance.byYear.map((y) => `${y.year}: ${formatCurrency(y.amount)}`).join(' · ');
 
   return (
-    <section className={styles.card}>
+    <Link href="/finanzas" className={styles.card}>
       <div className={styles.annualHeader}>
         <div>
           <p className={styles.cardLabel}>Balance anual vs. años anteriores</p>
@@ -38,6 +39,6 @@ export function AnnualBalanceCard({ annualBalance, hasData }: AnnualBalanceCardP
         )}
       </div>
       {yearsLabel && <p className={styles.cardNote}>{yearsLabel}</p>}
-    </section>
+    </Link>
   );
 }

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ProgressBar } from './ProgressBar';
 import styles from './dashboard.module.css';
 
@@ -8,7 +9,7 @@ interface ProductivityCardProps {
 
 export function ProductivityCard({ percent, hasData }: ProductivityCardProps) {
   return (
-    <section className={styles.card} data-tour="dashboard-productivity">
+    <Link href="/actividades" className={styles.card} data-tour="dashboard-productivity">
       <p className={styles.cardLabel}>Productividad de la semana</p>
       {hasData && percent !== null ? (
         <>
@@ -21,6 +22,6 @@ export function ProductivityCard({ percent, hasData }: ProductivityCardProps) {
           ver tu productividad.
         </p>
       )}
-    </section>
+    </Link>
   );
 }

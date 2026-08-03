@@ -15,6 +15,8 @@ interface CategorySectionProps {
   onMoveCategory: (direction: 'up' | 'down') => void;
   onMoveActivity: (activityId: string, direction: 'up' | 'down') => void;
   onSaveTimes: (activityId: string, times: { start: string; end: string }[]) => Promise<void>;
+  onDeleteCategory: () => void;
+  onDeleteActivity: (activityId: string) => void;
 }
 
 export function CategorySection({
@@ -28,7 +30,20 @@ export function CategorySection({
   onMoveCategory,
   onMoveActivity,
   onSaveTimes,
+  onDeleteCategory,
+  onDeleteActivity,
 }: CategorySectionProps) {
+  const handleDeleteCategory = () => {
+    // Borrar una categoría se lleva todas sus actividades (cascade en DB) --
+    // confirm explícito porque el blast radius es mucho mayor que borrar una
+    // sola actividad o rutina.
+    const activityCount = activities.length;
+    const warning =
+      activityCount > 0
+        ? `Esto borrará "${category.name}" y sus ${activityCount} actividad${activityCount === 1 ? '' : 'es'} (con todo su historial de horas). ¿Continuar?`
+        : `¿Borrar la categoría "${category.name}"?`;
+    if (window.confirm(warning)) onDeleteCategory();
+  };
   const totalToday = sumHours(activities.map((activity) => activity.todayHours));
 
   return (
@@ -63,6 +78,14 @@ export function CategorySection({
               <CaretDownIcon />
             </button>
           </div>
+          <button
+            type="button"
+            className={styles.iconOnlyButton}
+            onClick={handleDeleteCategory}
+            aria-label={`Eliminar categoría ${category.name}`}
+          >
+            <TrashIcon width={16} height={16} />
+          </button>
         </div>
       </div>
 
@@ -77,6 +100,7 @@ export function CategorySection({
                 onMoveUp={() => onMoveActivity(activity.id, 'up')}
                 onMoveDown={() => onMoveActivity(activity.id, 'down')}
                 onSaveTimes={(times) => onSaveTimes(activity.id, times)}
+                onDelete={() => onDeleteActivity(activity.id)}
               />
             </div>
           ))}
@@ -126,6 +150,7 @@ function ActivityRow({
   onMoveUp,
   onMoveDown,
   onSaveTimes,
+  onDelete,
 }: {
   activity: Activity;
   canMoveUp: boolean;
@@ -133,6 +158,7 @@ function ActivityRow({
   onMoveUp: () => void;
   onMoveDown: () => void;
   onSaveTimes: (times: { start: string; end: string }[]) => Promise<void>;
+  onDelete: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<DraftTime[]>(() => toManualDraft(activity.todayTimes));
@@ -219,6 +245,14 @@ function ActivityRow({
           aria-label={`Registrar horas de ${activity.name}`}
         >
           <PencilIcon width={16} height={16} />
+        </button>
+        <button
+          type="button"
+          className={styles.iconOnlyButton}
+          onClick={onDelete}
+          aria-label={`Eliminar ${activity.name}`}
+        >
+          <TrashIcon width={16} height={16} />
         </button>
       </div>
 

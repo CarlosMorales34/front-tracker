@@ -13,10 +13,13 @@ export function CategoryDistributionCard({ categories }: { categories: CategoryD
       ) : (
         categories.map((category) => (
           <div key={category.categoryId} className={styles.distributionRow}>
-            <span className={styles.distributionLabel}>{category.name}</span>
-            <span className={uiStyles.progressTrack} style={{ flex: 1 }}>
-              <span className={uiStyles.progressFill} style={{ width: `${category.percent}%`, background: category.color }} />
+            <span className={styles.distributionLabel}>
+              <span className={styles.detailCatDot} style={{ background: category.color }} />
+              <span>{category.name}</span>
             </span>
+            <div className={uiStyles.progressTrack} style={{ flex: 1 }}>
+              <div className={uiStyles.progressFill} style={{ width: `${category.percent}%`, background: category.color }} />
+            </div>
             <span className={styles.distributionValue}>{Math.round(category.percent)}%</span>
           </div>
         ))

@@ -79,8 +79,14 @@
 }
 
 .distributionLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   width: 110px;
   flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .distributionValue {

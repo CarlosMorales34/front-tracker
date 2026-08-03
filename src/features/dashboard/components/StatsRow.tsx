@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { DashboardData } from '../types/dashboard.types';
 import { formatCurrency } from '../utils/format';
 import styles from './dashboard.module.css';
@@ -29,7 +30,7 @@ export function StatsRow({
 
   return (
     <div className={styles.statsRow}>
-      <section className={styles.card}>
+      <Link href="/finanzas" className={styles.card}>
         <p className={styles.cardLabel}>Balance del mes</p>
         {monthlyBalanceHasData ? (
           <>
@@ -41,8 +42,8 @@ export function StatsRow({
         ) : (
           <p className={styles.cardNote}>Registra ingresos o gastos en Finanzas para ver tu balance del mes.</p>
         )}
-      </section>
-      <section className={styles.card}>
+      </Link>
+      <Link href="/peso" className={styles.card}>
         <p className={styles.cardLabel}>Peso actual</p>
         {currentWeightHasData && currentWeightKg !== null ? (
           <>
@@ -52,7 +53,7 @@ export function StatsRow({
         ) : (
           <p className={styles.cardNote}>Registra tu peso en Peso mensual para verlo aquí.</p>
         )}
-      </section>
+      </Link>
     </div>
   );
 }
