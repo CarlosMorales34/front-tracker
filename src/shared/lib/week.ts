@@ -5,6 +5,15 @@
 
 const MONTH_LABELS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
+// 0=domingo..6=sábado, mismo índice que Date#getDay() -- usado por las
+// rutinas de entrenamiento para asociarse (opcionalmente) a un día real y
+// poder recomendarse cuando ese día llega.
+export const WEEKDAY_FULL_LABELS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+export function getWeekdayOfDateIso(dateIso: string): number {
+  return parseDateOnly(dateIso).getDay();
+}
+
 // A propósito NO usa toISOString() (fuerza UTC) -- para un usuario en un
 // timezone negativo (ej. México, UTC-6) con hora local avanzada, convertir a
 // UTC puede saltar al día siguiente, desincronizando el weekStartDate/dateIso
@@ -34,6 +43,35 @@ export function getSaturdayWeekStart(date: Date): Date {
 
 export function getCurrentWeekStartIso(): string {
   return toIso(getSaturdayWeekStart(new Date()));
+}
+
+export function getTodayIso(): string {
+  return toIso(new Date());
+}
+
+export interface WeekDayChip {
+  dateIso: string;
+  weekdayLabel: string;
+  dayNumber: number;
+}
+
+const WEEKDAY_LABELS = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+
+// Los 7 días de la semana que empieza en `weekStartIso` (sábado), en vez de
+// siempre "la semana actual" -- lo usan vistas con navegación de semana
+// (Peso > Entrenamientos) donde el usuario puede estar viendo una semana
+// distinta a la de hoy.
+export function getWeekDayChips(weekStartIso: string): WeekDayChip[] {
+  const start = parseDateOnly(weekStartIso);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return {
+      dateIso: toIso(date),
+      weekdayLabel: WEEKDAY_LABELS[date.getDay()]!,
+      dayNumber: date.getDate(),
+    };
+  });
 }
 
 export function addWeeks(dateIso: string, weeks: number): string {

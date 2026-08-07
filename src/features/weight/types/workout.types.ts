@@ -22,9 +22,45 @@ export interface CreateWorkoutExerciseInput {
 }
 
 export interface CreateWorkoutInput {
+  workoutDate?: string;
   durationSeconds: number;
   comments: string | null;
   exercises: CreateWorkoutExerciseInput[];
+}
+
+export interface UpdateWorkoutInput {
+  workoutDate: string;
+  durationSeconds: number;
+  comments: string | null;
+  exercises: CreateWorkoutExerciseInput[];
+}
+
+export interface WorkoutRoutineExercise {
+  id: string;
+  name: string;
+  targetSets: number;
+  targetReps: number;
+  suggestedWeight: number | null;
+}
+
+export interface WorkoutRoutine {
+  id: string;
+  name: string;
+  weekday: number | null;
+  exercises: WorkoutRoutineExercise[];
+}
+
+export interface WorkoutRoutineExerciseInput {
+  name: string;
+  targetSets: number;
+  targetReps: number;
+  suggestedWeight: number | null;
+}
+
+export interface WorkoutRoutineInput {
+  name: string;
+  weekday: number | null;
+  exercises: WorkoutRoutineExerciseInput[];
 }
 
 export interface SessionVolumeExercise {

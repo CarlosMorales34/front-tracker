@@ -1,5 +1,5 @@
 import { apiFetch } from '../../../shared/lib/api-client';
-import { CreateWorkoutInput, Workout, WorkoutPerformance } from '../types/workout.types';
+import { CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutPerformance } from '../types/workout.types';
 
 function authHeaders(accessToken?: string | null): HeadersInit {
   return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
@@ -12,6 +12,13 @@ export const workoutApi = {
   create: (input: CreateWorkoutInput, accessToken?: string | null): Promise<Workout> =>
     apiFetch<Workout>('/api/workouts', {
       method: 'POST',
+      body: JSON.stringify(input),
+      headers: authHeaders(accessToken),
+    }),
+
+  update: (id: string, input: UpdateWorkoutInput, accessToken?: string | null): Promise<Workout> =>
+    apiFetch<Workout>(`/api/workouts/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(input),
       headers: authHeaders(accessToken),
     }),

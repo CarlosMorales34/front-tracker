@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { CaretDownIcon } from '../../../shared/components/icons/icons';
+import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { weeklyLogApi } from '../services/weekly-log.api';
 import { AnnualCounter, AnnualProductivitySummary, WeekDetail } from '../types/weekly-log.types';
@@ -19,6 +20,7 @@ const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
 
 export function WeeklyLogView() {
   const { accessToken } = useAuth();
+  const confirm = useConfirm();
   const [year, setYear] = useState(CURRENT_YEAR);
   const [summary, setSummary] = useState<AnnualProductivitySummary | null>(null);
   const [counters, setCounters] = useState<AnnualCounter[]>([]);
@@ -68,6 +70,9 @@ export function WeeklyLogView() {
   };
 
   const handleDeleteCounter = async (id: string) => {
+    const counter = counters.find((c) => c.id === id);
+    const ok = await confirm(`Estás a punto de borrar el contador "${counter?.name ?? ''}". ¿Estás seguro?`);
+    if (!ok) return;
     await weeklyLogApi.deleteCounter(id, accessToken);
     setCounters((prev) => prev.filter((c) => c.id !== id));
   };

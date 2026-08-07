@@ -33,17 +33,6 @@ export function CategorySection({
   onDeleteCategory,
   onDeleteActivity,
 }: CategorySectionProps) {
-  const handleDeleteCategory = () => {
-    // Borrar una categoría se lleva todas sus actividades (cascade en DB) --
-    // confirm explícito porque el blast radius es mucho mayor que borrar una
-    // sola actividad o rutina.
-    const activityCount = activities.length;
-    const warning =
-      activityCount > 0
-        ? `Esto borrará "${category.name}" y sus ${activityCount} actividad${activityCount === 1 ? '' : 'es'} (con todo su historial de horas). ¿Continuar?`
-        : `¿Borrar la categoría "${category.name}"?`;
-    if (window.confirm(warning)) onDeleteCategory();
-  };
   const totalToday = sumHours(activities.map((activity) => activity.todayHours));
 
   return (
@@ -81,7 +70,7 @@ export function CategorySection({
           <button
             type="button"
             className={styles.iconOnlyButton}
-            onClick={handleDeleteCategory}
+            onClick={onDeleteCategory}
             aria-label={`Eliminar categoría ${category.name}`}
           >
             <TrashIcon width={16} height={16} />

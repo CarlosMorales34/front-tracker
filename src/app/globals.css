@@ -11,6 +11,8 @@
   --color-accent-contrast: #ffffff;
   --color-text: #14141a;
   --color-text-secondary: #5b5b66;
+  --color-danger: #dc2626;
+  --color-danger-contrast: #ffffff;
 }
 
 /* Fallback sin JS / antes de hidratar: si el sistema prefiere dark y no hay
@@ -24,6 +26,8 @@
     --color-accent-contrast: #ffffff;
     --color-text: #ffffff;
     --color-text-secondary: #a3a3a3;
+    --color-danger: #f87171;
+    --color-danger-contrast: #1a0a0a;
   }
 }
 
@@ -37,6 +41,8 @@
   --color-accent-contrast: #ffffff;
   --color-text: #14141a;
   --color-text-secondary: #5b5b66;
+  --color-danger: #dc2626;
+  --color-danger-contrast: #ffffff;
 }
 
 :root[data-theme='dark'] {
@@ -47,6 +53,8 @@
   --color-accent-contrast: #ffffff;
   --color-text: #ffffff;
   --color-text-secondary: #a3a3a3;
+  --color-danger: #f87171;
+  --color-danger-contrast: #1a0a0a;
 }
 
 * {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
+import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
 import { activitiesApi } from '../services/activities.api';
 import { Activity, ActivityLog, Category, FixedRoutine, RoutineTimeRange, RoutineType } from '../types/activities.types';
 import {
@@ -82,6 +83,7 @@ function buildProductiveHoursByDay(logs: ActivityLog[]): number[] {
 
 export function ActivitiesView() {
   const { accessToken } = useAuth();
+  const confirm = useConfirm();
   const [tab, setTab] = useState<ActivitiesTab>('hoy');
   const [selectedDateIso, setSelectedDateIso] = useState(
     () => DAY_CHIPS.find((day) => day.dateIso === getTodayIso())?.dateIso ?? DAY_CHIPS[0]?.dateIso ?? '',
@@ -219,6 +221,9 @@ export function ActivitiesView() {
   };
 
   const handleDeleteRoutine = async (id: string) => {
+    const routine = routines.find((r) => r.id === id);
+    const ok = await confirm(`Estás a punto de borrar la rutina "${routine?.name ?? ''}". ¿Estás seguro?`);
+    if (!ok) return;
     await activitiesApi.deleteRoutine(id, accessToken);
     setRoutines((prev) => prev.filter((routine) => routine.id !== id));
   };
@@ -268,12 +273,23 @@ export function ActivitiesView() {
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
+    const category = categories.find((c) => c.id === categoryId);
+    const activityCount = activities.filter((activity) => activity.categoryId === categoryId).length;
+    const warning =
+      activityCount > 0
+        ? `Estás a punto de borrar la categoría "${category?.name ?? ''}" y sus ${activityCount} actividad${activityCount === 1 ? '' : 'es'} (con todo su historial de horas). ¿Estás seguro?`
+        : `Estás a punto de borrar la categoría "${category?.name ?? ''}". ¿Estás seguro?`;
+    const ok = await confirm(warning);
+    if (!ok) return;
     await activitiesApi.deleteCategory(categoryId, accessToken);
     setCategories((prev) => prev.filter((category) => category.id !== categoryId));
     setActivities((prev) => prev.filter((activity) => activity.categoryId !== categoryId));
   };
 
   const handleDeleteActivity = async (activityId: string) => {
+    const activity = activities.find((a) => a.id === activityId);
+    const ok = await confirm(`Estás a punto de borrar la actividad "${activity?.name ?? ''}". ¿Estás seguro?`);
+    if (!ok) return;
     await activitiesApi.deleteActivity(activityId, accessToken);
     setActivities((prev) => prev.filter((activity) => activity.id !== activityId));
   };

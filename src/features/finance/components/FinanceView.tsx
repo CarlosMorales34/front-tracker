@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { CaretDownIcon, CaretLeftIcon, PlusIcon, WarningIcon } from '../../../shared/components/icons/icons';
+import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
 import { EditableMoneyRow } from '../../../shared/components/ui/EditableMoneyRow';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { addWeeks, formatWeekRangeLabel, getCurrentWeekStartIso, getWeekNumberForYear } from '../../../shared/lib/week';
@@ -30,6 +31,7 @@ const RECURRENCE_SELECT_OPTIONS = Object.entries(RECURRENCE_LABELS).map(([value,
 
 export function FinanceView() {
   const { accessToken } = useAuth();
+  const confirm = useConfirm();
   const [weekStartDate, setWeekStartDate] = useState(getCurrentWeekStartIso());
   const [summary, setSummary] = useState<FinanceWeekSummary | null>(null);
   const [sobrante, setSobrante] = useState(0);
@@ -69,6 +71,9 @@ export function FinanceView() {
   };
 
   const handleDeleteAnnualIncome = async (id: string) => {
+    const entry = annualIncome.find((e) => e.id === id);
+    const ok = await confirm(`Estás a punto de borrar el ingreso anual ${entry?.year ?? ''}. ¿Estás seguro?`);
+    if (!ok) return;
     await financeApi.deleteAnnualIncome(id, accessToken);
     load();
   };
@@ -106,7 +111,17 @@ export function FinanceView() {
   };
 
   const handleDeleteCreditCard = async (id: string) => {
+    const card = creditCards.find((c) => c.id === id);
+    const ok = await confirm(`Estás a punto de borrar la tarjeta "${card?.name ?? ''}". ¿Estás seguro?`);
+    if (!ok) return;
     await creditCardsApi.delete(id, accessToken);
+    load();
+  };
+
+  const handleDeleteIncomeEntry = async (id: string, name: string) => {
+    const ok = await confirm(`Estás a punto de borrar el ingreso "${name}". ¿Estás seguro?`);
+    if (!ok) return;
+    await financeApi.deleteEntry(id, accessToken);
     load();
   };
 
@@ -312,10 +327,7 @@ export function FinanceView() {
                   await financeApi.updateEntry(entry.id, { amount }, accessToken);
                   load();
                 }}
-                onDelete={async () => {
-                  await financeApi.deleteEntry(entry.id, accessToken);
-                  load();
-                }}
+                onDelete={() => handleDeleteIncomeEntry(entry.id, entry.name)}
               />
               </div>
             ))}

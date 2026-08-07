@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { CaretLeftIcon, PlusIcon } from '../../../shared/components/icons/icons';
+import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
 import { EditableMoneyRow } from '../../../shared/components/ui/EditableMoneyRow';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { financeApi } from '../../finance/services/finance.api';
@@ -15,6 +16,7 @@ import { FixedExpenseRow } from './FixedExpenseRow';
 
 export function ExpensesView() {
   const { accessToken } = useAuth();
+  const confirm = useConfirm();
   const [dateIso, setDateIso] = useState(getTodayIso());
   const [currencySymbol, setCurrencySymbol] = useState('$');
   const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
@@ -72,8 +74,19 @@ export function ExpensesView() {
   };
 
   const handleDeleteFixed = async (id: string) => {
+    const item = fixedExpenses.find((e) => e.id === id);
+    const ok = await confirm(`Estás a punto de borrar el gasto programado "${item?.name ?? ''}". ¿Estás seguro?`);
+    if (!ok) return;
     await expensesApi.deleteFixed(id, accessToken);
     setFixedExpenses((prev) => prev.filter((item) => item.id !== id));
+    load();
+  };
+
+  const handleDeleteDaily = async (id: string, name: string) => {
+    const ok = await confirm(`Estás a punto de borrar el gasto "${name}". ¿Estás seguro?`);
+    if (!ok) return;
+    await expensesApi.deleteDaily(id, accessToken);
+    setDailyExpenses((prev) => prev.filter((e) => e.id !== id));
     load();
   };
 
@@ -165,11 +178,7 @@ export function ExpensesView() {
                 setDailyExpenses((prev) => prev.map((e) => (e.id === item.id ? { ...e, amount } : e)));
                 load();
               }}
-              onDelete={async () => {
-                await expensesApi.deleteDaily(item.id, accessToken);
-                setDailyExpenses((prev) => prev.filter((e) => e.id !== item.id));
-                load();
-              }}
+              onDelete={() => handleDeleteDaily(item.id, item.name)}
             />
             </div>
           ))
