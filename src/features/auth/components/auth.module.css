@@ -97,10 +97,21 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0.3rem;
+  transition: color var(--duration-fast) ease;
 }
 
 .passwordToggle:hover {
   color: var(--color-text);
+}
+
+.iconCrossfade {
+  display: inline-flex;
+  opacity: 1;
+  transition: opacity var(--duration-fast) ease;
+
+  @starting-style {
+    opacity: 0;
+  }
 }
 
 .errorText {
@@ -120,7 +131,11 @@
   background: var(--color-accent);
   color: var(--color-accent-contrast);
   font-family: inherit;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
+}
+
+.primaryButton:active {
+  transform: scale(0.97);
 }
 
 .primaryButton:disabled {
@@ -152,10 +167,15 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
 }
 
 .outlineButton:hover {
   border-color: var(--color-accent);
+}
+
+.outlineButton:active {
+  transform: scale(0.97);
 }
 
 .separator {

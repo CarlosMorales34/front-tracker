@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChartBarIcon } from '../../../shared/components/icons/icons';
+import { CaretDownIcon, ChartBarIcon } from '../../../shared/components/icons/icons';
 import { Category } from '../types/activities.types';
 import { formatHours } from '../utils/hours';
 import styles from './activities.module.css';
@@ -19,28 +19,31 @@ export function CategoryDistributionCard({ categories, totalsByCategory }: Categ
     <div>
       <button type="button" className={styles.outlineButton} onClick={() => setIsOpen((prev) => !prev)}>
         <ChartBarIcon /> {isOpen ? 'Ocultar distribución' : 'Ver distribución por categoría'}
+        <CaretDownIcon className={styles.categoryCollapseIcon} data-collapsed={!isOpen} />
       </button>
 
-      {isOpen && (
-        <div className={`${styles.card} ${styles.distributionCard}`}>
-          <p className={styles.sectionLabelInline}>Distribución de horas por categoría (semana)</p>
-          <div className={styles.distributionList}>
-            {categories.map((category) => {
-              const value = totalsByCategory[category.id] ?? null;
-              const percent = value ? Math.min((value / max) * 100, 100) : 0;
-              return (
-                <div key={category.id} className={styles.distributionRow} style={{ '--cat-color': category.color } as React.CSSProperties}>
-                  <span className={styles.distributionLabel}>{category.name}</span>
-                  <div className={styles.progressTrack}>
-                    <div className={styles.distributionFill} style={{ width: `${percent}%` }} />
+      <div className={styles.collapseWrapper} data-collapsed={!isOpen}>
+        <div className={styles.collapseInner}>
+          <div className={`${styles.card} ${styles.distributionCard}`}>
+            <p className={styles.sectionLabelInline}>Distribución de horas por categoría (semana)</p>
+            <div className={styles.distributionList}>
+              {categories.map((category) => {
+                const value = totalsByCategory[category.id] ?? null;
+                const percent = value ? Math.min((value / max) * 100, 100) : 0;
+                return (
+                  <div key={category.id} className={styles.distributionRow} style={{ '--cat-color': category.color } as React.CSSProperties}>
+                    <span className={styles.distributionLabel}>{category.name}</span>
+                    <div className={styles.progressTrack}>
+                      <div className={styles.distributionFill} style={{ transform: `scaleX(${percent / 100})` }} />
+                    </div>
+                    <span className={styles.distributionValue}>{formatHours(value)}h</span>
                   </div>
-                  <span className={styles.distributionValue}>{formatHours(value)}h</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

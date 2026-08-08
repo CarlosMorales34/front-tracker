@@ -8,6 +8,7 @@ import { MetricList } from '../../features/metrics/components/MetricList';
 import { metricsApi } from '../../features/metrics/services/metrics.api';
 import { CreateMetricInput, Metric } from '../../features/metrics/types/metric.types';
 import { AppShell } from '../../shared/components/layout/AppShell';
+import { Spinner } from '../../shared/components/ui/Spinner';
 
 export default function MetricsPage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function MetricsPage() {
   if (isAuthLoading || !user) {
     return (
       <AppShell>
-        <p>Cargando…</p>
+        <Spinner />
       </AppShell>
     );
   }
@@ -55,7 +56,7 @@ export default function MetricsPage() {
   return (
     <AppShell>
       <MetricForm onSubmit={handleCreate} />
-      {isLoading ? <p>Cargando…</p> : <MetricList metrics={metrics} />}
+      {isLoading ? <Spinner /> : <MetricList metrics={metrics} />}
     </AppShell>
   );
 }

@@ -51,10 +51,15 @@
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
 }
 
 .ghostButton:hover {
   border-color: var(--color-accent);
+}
+
+.ghostButton:active {
+  transform: scale(0.97);
 }
 
 .hero {
@@ -117,10 +122,15 @@
   text-decoration: none;
   font-size: 0.92rem;
   font-weight: 600;
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
 }
 
 .secondaryButton:hover {
   border-color: var(--color-accent);
+}
+
+.secondaryButton:active {
+  transform: scale(0.97);
 }
 
 .statsSection {

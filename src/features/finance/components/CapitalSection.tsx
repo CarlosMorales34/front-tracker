@@ -54,7 +54,8 @@ export function CapitalSection({
         </span>
       </button>
 
-      {!isCollapsed && (
+      <div className={styles.collapseWrapper} data-collapsed={isCollapsed}>
+        <div className={styles.collapseInner}>
         <div className={styles.capitalBody}>
           <div className={uiStyles.card}>
             <p className={uiStyles.cardLabel}>Presupuesto (liquidez)</p>
@@ -119,7 +120,8 @@ export function CapitalSection({
             </span>
           </div>
         </div>
-      )}
+        </div>
+      </div>
 
       {isCardModalOpen && (
         <AddCreditCardModal

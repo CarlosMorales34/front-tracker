@@ -113,7 +113,10 @@ export function WeeklyLogView() {
           </span>
         </p>
         <div className={uiStyles.progressTrack} style={{ marginBottom: '0.75rem' }}>
-          <div className={uiStyles.progressFill} style={{ width: `${summary.annualPercent ?? 0}%` }} />
+          <div
+            className={uiStyles.progressFill}
+            style={{ transform: `scaleX(${Math.min(Math.max(summary.annualPercent ?? 0, 0), 100) / 100})` }}
+          />
         </div>
         <p className={uiStyles.cardNote}>
           Meta ideal = horas del año, menos sueño, menos rutina fija — el resto es tu capacidad productiva real por

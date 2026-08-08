@@ -7,6 +7,7 @@ import { DashboardHome } from '../../features/dashboard/components/DashboardHome
 import { homeApi } from '../../features/dashboard/services/home.api';
 import { DashboardData } from '../../features/dashboard/types/dashboard.types';
 import { DashboardShell } from '../../shared/components/layout/DashboardShell';
+import { Spinner } from '../../shared/components/ui/Spinner';
 
 // Home post-login. Igual que /metrics, redirige a /login si el refresh
 // silencioso de sesión (ver AuthContext) no encuentra usuario.
@@ -38,7 +39,7 @@ export default function DashboardPage() {
   if (isAuthLoading || !user || isLoadingSummary || !data) {
     return (
       <DashboardShell>
-        <p>Cargando…</p>
+        <Spinner />
       </DashboardShell>
     );
   }

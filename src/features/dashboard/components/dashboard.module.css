@@ -128,9 +128,11 @@
 
 .progressFill {
   height: 100%;
+  width: 100%;
   border-radius: 999px;
   background: var(--color-accent);
-  transition: width 0.2s ease;
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-out);
 }
 
 .categoryList {

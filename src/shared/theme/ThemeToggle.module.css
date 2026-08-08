@@ -11,10 +11,25 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
 }
 
 .toggle:hover {
   border-color: var(--color-accent);
+}
+
+.toggle:active {
+  transform: scale(0.97);
+}
+
+.iconCrossfade {
+  display: inline-flex;
+  opacity: 1;
+  transition: opacity var(--duration-fast) ease;
+
+  @starting-style {
+    opacity: 0;
+  }
 }
 
 .placeholder {

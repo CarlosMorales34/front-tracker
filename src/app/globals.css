@@ -13,6 +13,13 @@
   --color-text-secondary: #5b5b66;
   --color-danger: #dc2626;
   --color-danger-contrast: #ffffff;
+
+  /* Motion tokens */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-modal: 250ms;
 }
 
 /* Fallback sin JS / antes de hidratar: si el sistema prefiere dark y no hay
@@ -89,4 +96,15 @@ ul {
 li {
   padding: 0.5rem 0;
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

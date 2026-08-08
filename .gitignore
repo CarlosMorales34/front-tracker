@@ -14,3 +14,4 @@ credentials.json
 .arch-index/
 *.tsbuildinfo
 *.vscode
+*plans

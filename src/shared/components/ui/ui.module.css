@@ -48,6 +48,7 @@
   border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 1.1rem 1.25rem;
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease, color var(--duration-fast) ease;
 }
 
 .cardLabel {
@@ -116,11 +117,16 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  transition: border-color var(--duration-fast) ease, color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
 }
 
 .iconOnlyButton:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
+}
+
+.iconOnlyButton:active {
+  transform: scale(0.97);
 }
 
 .outlineButton {
@@ -138,11 +144,16 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+  transition: border-color var(--duration-fast) ease, color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
 }
 
 .outlineButton:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
+}
+
+.outlineButton:active {
+  transform: scale(0.97);
 }
 
 .iconInlineButton {
@@ -157,11 +168,16 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  transition: border-color var(--duration-fast) ease, color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
 }
 
 .iconInlineButton:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
+}
+
+.iconInlineButton:active {
+  transform: scale(0.97);
 }
 
 /* --- Fila editable inline (nombre + monto + borrar) -- Finanzas y Gastos
@@ -255,6 +271,12 @@
   justify-content: center;
   padding: 1.25rem;
   z-index: 50;
+  opacity: 0;
+  transition: opacity var(--duration-modal) var(--ease-out);
+}
+
+.modalBackdrop[data-visible='true'] {
+  opacity: 1;
 }
 
 .modalCard {
@@ -264,6 +286,18 @@
   border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 1.5rem;
+  opacity: 0;
+  transform: scale(0.95) translateY(8px);
+  transition:
+    opacity var(--duration-modal) var(--ease-out),
+    transform var(--duration-modal) var(--ease-out),
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+}
+
+.modalCard[data-visible='true'] {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 .modalHeader {
@@ -337,6 +371,11 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) ease;
+}
+
+.modalCancelButton:active {
+  transform: scale(0.97);
 }
 
 .modalPrimaryButton {
@@ -349,6 +388,15 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) ease;
+}
+
+.modalPrimaryButton:hover {
+  opacity: 0.9;
+}
+
+.modalPrimaryButton:active {
+  transform: scale(0.97);
 }
 
 .modalDangerButton {
@@ -361,6 +409,15 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) ease;
+}
+
+.modalDangerButton:hover {
+  opacity: 0.9;
+}
+
+.modalDangerButton:active {
+  transform: scale(0.97);
 }
 
 /* --- Progress bar genérica --- */
@@ -375,9 +432,46 @@
 
 .progressFill {
   height: 100%;
+  width: 100%;
   border-radius: 999px;
   background: var(--color-accent);
-  transition: width 0.2s ease;
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.spinnerWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinnerLabel {
+  font-size: 0.85rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.5s;
+  }
 }
 
 /* --- Selector tipo <select> con flecha custom --- */

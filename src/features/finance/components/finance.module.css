@@ -209,6 +209,21 @@
   transform: rotate(-90deg);
 }
 
+.collapseWrapper {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--duration-base) var(--ease-in-out);
+}
+
+.collapseWrapper[data-collapsed='true'] {
+  grid-template-rows: 0fr;
+}
+
+.collapseInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .capitalTotals {
   display: flex;
   gap: 0.9rem;

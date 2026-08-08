@@ -22,7 +22,13 @@ export function ThemeToggle() {
 
   return (
     <button type="button" className={styles.toggle} onClick={toggleTheme} aria-label={label}>
-      {mounted ? theme === 'dark' ? <SunIcon /> : <MoonIcon /> : <span className={styles.placeholder} />}
+      {mounted ? (
+        <span key={theme} className={styles.iconCrossfade}>
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </span>
+      ) : (
+        <span className={styles.placeholder} />
+      )}
     </button>
   );
 }

@@ -18,7 +18,13 @@ export function CategoryDistributionCard({ categories }: { categories: CategoryD
               <span>{category.name}</span>
             </span>
             <div className={uiStyles.progressTrack} style={{ flex: 1 }}>
-              <div className={uiStyles.progressFill} style={{ width: `${category.percent}%`, background: category.color }} />
+              <div
+                className={uiStyles.progressFill}
+                style={{
+                  transform: `scaleX(${Math.min(Math.max(category.percent, 0), 100) / 100})`,
+                  background: category.color,
+                }}
+              />
             </div>
             <span className={styles.distributionValue}>{Math.round(category.percent)}%</span>
           </div>

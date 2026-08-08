@@ -13,6 +13,7 @@
   font-family: inherit;
   cursor: pointer;
   text-align: left;
+  transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
 }
 
 .rowButton:hover {
@@ -38,6 +39,11 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
+  transition: border-color var(--duration-fast) ease, color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
+}
+
+.iconButton:active {
+  transform: scale(0.97);
 }
 
 .iconButton:hover {

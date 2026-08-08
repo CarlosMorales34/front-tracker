@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useAuth } from '../../features/auth/context/AuthContext';
 import { WeeklyLogView } from '../../features/weekly-log/components/WeeklyLogView';
 import { DashboardShell } from '../../shared/components/layout/DashboardShell';
+import { Spinner } from '../../shared/components/ui/Spinner';
 
 export default function SemanalPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function SemanalPage() {
   if (isAuthLoading || !user) {
     return (
       <DashboardShell>
-        <p>Cargando…</p>
+        <Spinner />
       </DashboardShell>
     );
   }

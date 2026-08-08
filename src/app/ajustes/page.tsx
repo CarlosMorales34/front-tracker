@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useAuth } from '../../features/auth/context/AuthContext';
 import { useOnboarding } from '../../features/onboarding/OnboardingProvider';
 import { DashboardShell } from '../../shared/components/layout/DashboardShell';
+import { Spinner } from '../../shared/components/ui/Spinner';
 import uiStyles from '../../shared/components/ui/ui.module.css';
 import dashboardStyles from '../../features/dashboard/components/dashboard.module.css';
 
@@ -22,7 +23,7 @@ export default function AjustesPage() {
   if (isAuthLoading || !user) {
     return (
       <DashboardShell>
-        <p>Cargando…</p>
+        <Spinner />
       </DashboardShell>
     );
   }

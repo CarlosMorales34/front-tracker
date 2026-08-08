@@ -78,32 +78,34 @@ export function CategorySection({
         </div>
       </div>
 
-      {!isCollapsed && (
-        <div className={styles.plainList}>
-          {activities.map((activity, index) => (
-            <div key={activity.id} data-tour="activities-activity-row">
-              <ActivityRow
-                activity={activity}
-                canMoveUp={index > 0}
-                canMoveDown={index < activities.length - 1}
-                onMoveUp={() => onMoveActivity(activity.id, 'up')}
-                onMoveDown={() => onMoveActivity(activity.id, 'down')}
-                onSaveTimes={(times) => onSaveTimes(activity.id, times)}
-                onDelete={() => onDeleteActivity(activity.id)}
-              />
-            </div>
-          ))}
+      <div className={styles.collapseWrapper} data-collapsed={isCollapsed}>
+        <div className={styles.collapseInner}>
+          <div className={styles.plainList}>
+            {activities.map((activity, index) => (
+              <div key={activity.id} data-tour="activities-activity-row">
+                <ActivityRow
+                  activity={activity}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < activities.length - 1}
+                  onMoveUp={() => onMoveActivity(activity.id, 'up')}
+                  onMoveDown={() => onMoveActivity(activity.id, 'down')}
+                  onSaveTimes={(times) => onSaveTimes(activity.id, times)}
+                  onDelete={() => onDeleteActivity(activity.id)}
+                />
+              </div>
+            ))}
 
-          <button
-            type="button"
-            className={styles.addActivityButton}
-            onClick={onAddActivityClick}
-            data-tour="activities-add-activity-button"
-          >
-            <PlusIcon /> Nueva actividad
-          </button>
+            <button
+              type="button"
+              className={styles.addActivityButton}
+              onClick={onAddActivityClick}
+              data-tour="activities-add-activity-button"
+            >
+              <PlusIcon /> Nueva actividad
+            </button>
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }

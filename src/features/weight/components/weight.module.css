@@ -91,6 +91,7 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease, color var(--duration-fast) ease;
 }
 
 .directionOption[data-selected='true'] {
@@ -129,6 +130,7 @@
   padding: 0.35rem 0.7rem;
   border-radius: 7px;
   cursor: pointer;
+  transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
 }
 
 .pesoTabToggle button[data-selected='true'] {
@@ -170,6 +172,7 @@
   padding: 0.35rem 0.7rem;
   border-radius: 7px;
   cursor: pointer;
+  transition: background-color var(--duration-fast) ease, color var(--duration-fast) ease;
 }
 
 .modalTabToggle button[data-selected='true'] {
@@ -201,6 +204,7 @@
   color: var(--color-text);
   cursor: pointer;
   font-family: inherit;
+  transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
 }
 
 .dayChip[data-selected='true'] {
@@ -336,6 +340,14 @@
   border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.7rem;
   margin-bottom: 0.7rem;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
 
 .draftExerciseTop {
