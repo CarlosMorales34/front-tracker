@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
+import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draft';
 import { WEEKDAY_FULL_LABELS } from '../../../shared/lib/week';
 import { WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
 import { sanitizeDecimal, sanitizeInt } from '../utils/numeric-input';
@@ -21,6 +22,16 @@ interface NewWorkoutRoutineModalProps {
   routine?: WorkoutRoutine;
   onClose: () => void;
   onSave: (input: WorkoutRoutineInput) => Promise<void>;
+}
+
+// Un solo borrador activo a la vez, mismo criterio que NewWorkoutModal --
+// solo aplica al crear, no al editar una rutina existente.
+const DRAFT_KEY = 'new-workout-routine';
+
+interface RoutineDraft {
+  name: string;
+  weekday: number | null;
+  draftExercises: DraftRoutineExercise[];
 }
 
 function draftFromRoutine(routine: WorkoutRoutine): DraftRoutineExercise[] {
@@ -42,6 +53,40 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
     routine ? draftFromRoutine(routine) : [{ id: 0, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '' }],
   );
   const [isSaving, setIsSaving] = useState(false);
+
+  const [pendingDraft, setPendingDraft] = useState<RoutineDraft | null>(null);
+  const [draftChecked, setDraftChecked] = useState(isEditing);
+
+  useEffect(() => {
+    if (isEditing) return;
+    const stored = loadDraft<RoutineDraft>(DRAFT_KEY);
+    if (stored) setPendingDraft(stored.value);
+    setDraftChecked(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const recoverDraft = () => {
+    if (!pendingDraft) return;
+    setName(pendingDraft.name);
+    setWeekday(pendingDraft.weekday);
+    setDraftExercises(pendingDraft.draftExercises);
+    nextIdRef.current = pendingDraft.draftExercises.length;
+    setPendingDraft(null);
+  };
+
+  const discardDraft = () => {
+    clearDraft(DRAFT_KEY);
+    setPendingDraft(null);
+  };
+
+  useEffect(() => {
+    if (isEditing || !draftChecked || pendingDraft) return;
+    const timeout = setTimeout(() => {
+      saveDraft<RoutineDraft>(DRAFT_KEY, { name, weekday, draftExercises });
+    }, 500);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, draftChecked, pendingDraft, name, weekday, draftExercises]);
 
   const addDraftExercise = () => {
     setDraftExercises((prev) => [
@@ -75,6 +120,7 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
           suggestedWeight: ex.suggestedWeight.trim() === '' ? null : Number(ex.suggestedWeight),
         })),
       });
+      clearDraft(DRAFT_KEY);
     } finally {
       setIsSaving(false);
     }
@@ -83,6 +129,22 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
   return (
     <Modal title={isEditing ? 'Editar rutina' : 'Nueva rutina'} onClose={onClose}>
       <div className={uiStyles.modalForm}>
+        {pendingDraft && (
+          <div className={uiStyles.card} style={{ padding: '0.85rem 1rem' }}>
+            <p className={uiStyles.cardNote} style={{ marginBottom: '0.65rem' }}>
+              Tienes un borrador sin guardar de una rutina anterior. ¿Quieres recuperarlo?
+            </p>
+            <div className={uiStyles.modalActions} style={{ marginTop: 0 }}>
+              <button type="button" className={uiStyles.modalCancelButton} onClick={discardDraft}>
+                Descartar
+              </button>
+              <button type="button" className={uiStyles.modalPrimaryButton} onClick={recoverDraft}>
+                Recuperar borrador
+              </button>
+            </div>
+          </div>
+        )}
+
         <label className={uiStyles.modalLabel}>
           Nombre
           <input

@@ -6,11 +6,12 @@ import { CaretDownIcon } from '../../../shared/components/icons/icons';
 import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { weeklyLogApi } from '../services/weekly-log.api';
-import { AnnualCounter, AnnualProductivitySummary, WeekDetail } from '../types/weekly-log.types';
+import { AnnualCounter, AnnualProductivitySummary, WeekDetail, WeeklyTrend } from '../types/weekly-log.types';
 import { formatPercent } from '../utils/format';
 import { AddCounterModal } from './AddCounterModal';
 import { CategoryDistributionCard } from './CategoryDistributionCard';
 import { CountersSection } from './CountersSection';
+import { MonthlyTrendCard } from './MonthlyTrendCard';
 import { WeekDetailModal } from './WeekDetailModal';
 import { WeekHeatmap } from './WeekHeatmap';
 import { WeeksList } from './WeeksList';
@@ -23,6 +24,7 @@ export function WeeklyLogView() {
   const confirm = useConfirm();
   const [year, setYear] = useState(CURRENT_YEAR);
   const [summary, setSummary] = useState<AnnualProductivitySummary | null>(null);
+  const [trend, setTrend] = useState<WeeklyTrend | null>(null);
   const [counters, setCounters] = useState<AnnualCounter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
@@ -32,12 +34,14 @@ export function WeeklyLogView() {
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [yearSummary, yearCounters] = await Promise.all([
+      const [yearSummary, yearCounters, monthlyTrend] = await Promise.all([
         weeklyLogApi.getYear(year, accessToken),
         weeklyLogApi.listCounters(year, accessToken),
+        weeklyLogApi.getTrend(accessToken),
       ]);
       setSummary(yearSummary);
       setCounters(yearCounters);
+      setTrend(monthlyTrend);
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +127,8 @@ export function WeeklyLogView() {
           semana.
         </p>
       </div>
+
+      {trend && <MonthlyTrendCard trend={trend} />}
 
       <div>
         <p className={uiStyles.sectionLabel} style={{ marginBottom: '0.5rem' }}>

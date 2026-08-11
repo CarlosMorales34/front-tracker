@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/context/AuthContext';
 import { CaretLeftIcon, ClockIcon, PencilIcon, PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
 import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
+import { OfflineQueuedError } from '../../../shared/lib/api-client';
 import { addWeeks, getCurrentWeekStartIso, formatWeekRangeLabel, getTodayIso, getWeekDayChips } from '../../../shared/lib/week';
 import { workoutApi } from '../services/workout.api';
 import { workoutRoutineApi } from '../services/workout-routine.api';
@@ -70,14 +71,31 @@ export function WorkoutsTab() {
     if (accessToken) load();
   }, [accessToken, load]);
 
+  // Si no hay red, apiFetch encola la mutación sola y lanza
+  // OfflineQueuedError en vez de un error real -- el dato ya quedó a salvo
+  // en este dispositivo (ver shared/lib/offline/mutation-queue.ts), así que
+  // acá se trata como éxito (cierra el modal igual) en vez de mostrarlo
+  // como una falla.
+  const ignoreIfQueued = (error: unknown) => {
+    if (!(error instanceof OfflineQueuedError)) throw error;
+  };
+
   const handleSave = async (input: CreateWorkoutInput) => {
-    await workoutApi.create(input, accessToken);
+    try {
+      await workoutApi.create(input, accessToken);
+    } catch (error) {
+      ignoreIfQueued(error);
+    }
     setModalOpen(false);
     load();
   };
 
   const handleUpdate = async (id: string, input: UpdateWorkoutInput) => {
-    await workoutApi.update(id, input, accessToken);
+    try {
+      await workoutApi.update(id, input, accessToken);
+    } catch (error) {
+      ignoreIfQueued(error);
+    }
     setEditingWorkout(null);
     load();
   };
@@ -87,19 +105,31 @@ export function WorkoutsTab() {
     const label = workout ? formatDayLabel(workout.workoutDate) : '';
     const ok = await confirm(`Estás a punto de borrar el entrenamiento del ${label}. ¿Estás seguro?`);
     if (!ok) return;
-    await workoutApi.delete(id, accessToken);
+    try {
+      await workoutApi.delete(id, accessToken);
+    } catch (error) {
+      ignoreIfQueued(error);
+    }
     load();
   };
 
   const handleSaveRoutine = async (input: WorkoutRoutineInput) => {
-    await workoutRoutineApi.create(input, accessToken);
+    try {
+      await workoutRoutineApi.create(input, accessToken);
+    } catch (error) {
+      ignoreIfQueued(error);
+    }
     setRoutineModalOpen(false);
     load();
   };
 
   const handleUpdateRoutine = async (input: WorkoutRoutineInput) => {
     if (!editingRoutine) return;
-    await workoutRoutineApi.update(editingRoutine.id, input, accessToken);
+    try {
+      await workoutRoutineApi.update(editingRoutine.id, input, accessToken);
+    } catch (error) {
+      ignoreIfQueued(error);
+    }
     setEditingRoutine(null);
     load();
   };
@@ -107,7 +137,11 @@ export function WorkoutsTab() {
   const handleDeleteRoutine = async (routine: WorkoutRoutine) => {
     const ok = await confirm(`Estás a punto de borrar la rutina "${routine.name}". ¿Estás seguro?`);
     if (!ok) return;
-    await workoutRoutineApi.delete(routine.id, accessToken);
+    try {
+      await workoutRoutineApi.delete(routine.id, accessToken);
+    } catch (error) {
+      ignoreIfQueued(error);
+    }
     load();
   };
 

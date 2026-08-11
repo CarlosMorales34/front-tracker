@@ -282,10 +282,17 @@
 .modalCard {
   width: 100%;
   max-width: 420px;
+  /* dvh (not vh) tracks the *visual* viewport on mobile, so this correctly
+     shrinks when the on-screen keyboard opens -- keeping the sticky
+     .modalActions footer above the keyboard instead of pushed off-screen. */
+  max-height: min(calc(100dvh - 2.5rem), 640px);
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: 18px;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 0;
   opacity: 0;
   transform: scale(0.95) translateY(8px);
   transition:
@@ -355,12 +362,22 @@
   border-color: var(--color-accent);
 }
 
+/* Sticky footer: sticks to the bottom of .modalCard's own scroll area (not
+   the viewport) once form content overflows it, so Cancelar/Guardar stay
+   reachable no matter how many rows (e.g. exercises) the form grows to --
+   this was the actual bug: on mobile, past ~4 exercises the card had no
+   scroll affordance at all and the action buttons were simply unreachable. */
 .modalActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 1.25rem;
-  margin-top: 0.5rem;
+  position: sticky;
+  bottom: -1.5rem;
+  margin: 1rem -1.5rem -1.5rem;
+  padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
+  background: var(--color-bg-elevated);
+  border-top: 1px solid var(--color-border);
 }
 
 .modalCancelButton {
@@ -437,6 +454,18 @@
   background: var(--color-accent);
   transform-origin: left;
   transition: transform var(--duration-base) var(--ease-out);
+}
+
+.offlineBanner {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
 }
 
 .spinnerWrap {

@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { LogoutButton } from '../../../features/auth/components/LogoutButton';
 import { ThemeToggle } from '../../theme/ThemeToggle';
+import { OfflineIndicator } from '../ui/OfflineIndicator';
 import { BottomTabBar } from './BottomTabBar';
 import { Sidebar } from './Sidebar';
 import styles from './DashboardShell.module.css';
@@ -20,7 +21,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <LogoutButton variant="icon" />
         <ThemeToggle />
       </div>
-      <main className={styles.content}>{children}</main>
+      <main className={styles.content}>
+        <OfflineIndicator />
+        {children}
+      </main>
       <BottomTabBar />
     </div>
   );

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
+import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draft';
 import { WEEKDAY_FULL_LABELS, getWeekdayOfDateIso } from '../../../shared/lib/week';
 import { CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutRoutine } from '../types/workout.types';
 import { sanitizeDecimal, sanitizeInt } from '../utils/numeric-input';
@@ -16,6 +17,22 @@ interface DraftExercise {
   weight: string;
   sets: string;
   reps: string[];
+}
+
+// Un solo borrador activo a la vez -- protege contra perder lo escrito en
+// una sesión en vivo si se cierra o recarga la pestaña por accidente. Solo
+// aplica al crear (editar ya tiene los datos reales guardados en el
+// servidor, no necesita autoguardado local).
+const DRAFT_KEY = 'new-workout';
+
+interface WorkoutDraft {
+  timeMode: 'timer' | 'range';
+  elapsedSeconds: number;
+  rangeStart: string;
+  rangeEnd: string;
+  draftExercises: DraftExercise[];
+  comments: string;
+  appliedRoutineId: string | null;
 }
 
 interface NewWorkoutModalProps {
@@ -79,6 +96,62 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
   const [comments, setComments] = useState(workout?.comments ?? '');
   const [isSaving, setIsSaving] = useState(false);
   const [suggestionDismissed, setSuggestionDismissed] = useState(false);
+  // Qué rutina se usó como plantilla (si alguna) -- se guarda con el
+  // entrenamiento como su origen, para poder filtrar el historial después.
+  const [appliedRoutineId, setAppliedRoutineId] = useState<string | null>(null);
+
+  // Borrador local sin recuperar todavía -- se ofrece antes de aplicarlo
+  // solo, para no pisar lo que el usuario ya haya empezado a escribir en
+  // esta apertura del modal.
+  const [pendingDraft, setPendingDraft] = useState<WorkoutDraft | null>(null);
+  const [draftChecked, setDraftChecked] = useState(isEditing);
+
+  useEffect(() => {
+    if (isEditing) return;
+    const stored = loadDraft<WorkoutDraft>(DRAFT_KEY);
+    if (stored) setPendingDraft(stored.value);
+    setDraftChecked(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const recoverDraft = () => {
+    if (!pendingDraft) return;
+    setTimeMode(pendingDraft.timeMode);
+    setElapsedSeconds(pendingDraft.elapsedSeconds);
+    setRangeStart(pendingDraft.rangeStart);
+    setRangeEnd(pendingDraft.rangeEnd);
+    setDraftExercises(pendingDraft.draftExercises);
+    setComments(pendingDraft.comments);
+    setAppliedRoutineId(pendingDraft.appliedRoutineId);
+    nextIdRef.current = pendingDraft.draftExercises.length;
+    setPendingDraft(null);
+  };
+
+  const discardDraft = () => {
+    clearDraft(DRAFT_KEY);
+    setPendingDraft(null);
+  };
+
+  // Autoguardado: cualquier cambio en el borrador se persiste localmente,
+  // debounced para no escribir en cada tecla. No corre mientras hay un
+  // borrador pendiente de recuperar/descartar (evitaría pisarlo con el
+  // estado en blanco inicial) ni en modo edición.
+  useEffect(() => {
+    if (isEditing || !draftChecked || pendingDraft) return;
+    const timeout = setTimeout(() => {
+      saveDraft<WorkoutDraft>(DRAFT_KEY, {
+        timeMode,
+        elapsedSeconds: currentElapsed(),
+        rangeStart,
+        rangeEnd,
+        draftExercises,
+        comments,
+        appliedRoutineId,
+      });
+    }, 500);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, draftChecked, pendingDraft, timeMode, rangeStart, rangeEnd, draftExercises, comments, appliedRoutineId]);
 
   // Solo al crear (no editar) y solo si hay una rutina asociada al día
   // seleccionado -- se sugiere, no se aplica sola, para no pisar lo que el
@@ -131,6 +204,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
     if (!routine) return;
     nextIdRef.current = routine.exercises.length;
     setDraftExercises(draftExercisesFromRoutine(routine));
+    setAppliedRoutineId(routineId);
   };
 
   const acceptSuggestedRoutine = () => {
@@ -193,7 +267,8 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
       if (isEditing && workout && onUpdate) {
         await onUpdate(workout.id, { workoutDate: workout.workoutDate, durationSeconds, comments: comment, exercises });
       } else {
-        await onSave({ workoutDate: defaultDate, durationSeconds, comments: comment, exercises });
+        await onSave({ workoutDate: defaultDate, sourceRoutineId: appliedRoutineId, durationSeconds, comments: comment, exercises });
+        clearDraft(DRAFT_KEY);
       }
     } finally {
       setIsSaving(false);
@@ -203,6 +278,22 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
   return (
     <Modal title={isEditing ? 'Editar entrenamiento' : 'Nuevo entrenamiento'} onClose={onClose}>
       <div className={uiStyles.modalForm}>
+        {pendingDraft && (
+          <div className={uiStyles.card} style={{ padding: '0.85rem 1rem' }}>
+            <p className={uiStyles.cardNote} style={{ marginBottom: '0.65rem' }}>
+              Tienes un borrador sin guardar de un entrenamiento anterior. ¿Quieres recuperarlo?
+            </p>
+            <div className={uiStyles.modalActions} style={{ marginTop: 0 }}>
+              <button type="button" className={uiStyles.modalCancelButton} onClick={discardDraft}>
+                Descartar
+              </button>
+              <button type="button" className={uiStyles.modalPrimaryButton} onClick={recoverDraft}>
+                Recuperar borrador
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className={styles.modalTabToggle} style={{ marginBottom: '0.9rem' }}>
           <button type="button" data-selected={timeMode === 'timer'} onClick={() => setTimeMode('timer')}>
             Cronómetro

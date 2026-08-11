@@ -1,5 +1,5 @@
 import { apiFetch } from '../../../shared/lib/api-client';
-import { AnnualCounter, AnnualProductivitySummary, WeekDetail } from '../types/weekly-log.types';
+import { AnnualCounter, AnnualProductivitySummary, WeekDetail, WeeklyTrend } from '../types/weekly-log.types';
 
 function authHeaders(accessToken?: string | null): HeadersInit {
   return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
@@ -11,6 +11,9 @@ export const weeklyLogApi = {
 
   getWeek: (year: number, weekNumber: number, accessToken?: string | null): Promise<WeekDetail> =>
     apiFetch<WeekDetail>(`/api/weekly-log/weeks/${year}/${weekNumber}`, { headers: authHeaders(accessToken) }),
+
+  getTrend: (accessToken?: string | null): Promise<WeeklyTrend> =>
+    apiFetch<WeeklyTrend>('/api/weekly-log/trend', { headers: authHeaders(accessToken) }),
 
   setWeekNotes: (
     year: number,

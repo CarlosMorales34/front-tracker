@@ -9,6 +9,7 @@ export interface WorkoutExercise {
 export interface Workout {
   id: string;
   workoutDate: string;
+  sourceRoutineId: string | null;
   durationSeconds: number;
   comments: string | null;
   exercises: WorkoutExercise[];
@@ -23,6 +24,7 @@ export interface CreateWorkoutExerciseInput {
 
 export interface CreateWorkoutInput {
   workoutDate?: string;
+  sourceRoutineId?: string | null;
   durationSeconds: number;
   comments: string | null;
   exercises: CreateWorkoutExerciseInput[];
@@ -72,13 +74,14 @@ export interface SessionVolumeExercise {
 
 export interface SessionVolumePoint {
   workoutDate: string;
+  sourceRoutineId: string | null;
   volume: number;
   exercises: SessionVolumeExercise[];
 }
 
 export interface ExercisePerformanceSeries {
   name: string;
-  history: { workoutDate: string; weight: number | null; totalReps: number }[];
+  history: { workoutDate: string; sourceRoutineId: string | null; weight: number | null; totalReps: number }[];
 }
 
 export interface WorkoutPerformance {

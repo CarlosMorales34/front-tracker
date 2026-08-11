@@ -51,3 +51,28 @@ export interface AnnualProductivitySummary {
   weeksWithData: number;
   categoryDistribution: CategoryDistribution[];
 }
+
+export interface WeeklyTrendWeek {
+  weekNumber: number;
+  year: number;
+  rangeLabel: string;
+  percent: number | null;
+}
+
+export interface CategoryTrendItem {
+  categoryId: string;
+  name: string;
+  color: string;
+  deltaHours: number;
+}
+
+export interface WeeklyTrend {
+  currentWeeks: WeeklyTrendWeek[];
+  previousWeeks: WeeklyTrendWeek[];
+  currentAvgPercent: number | null;
+  previousAvgPercent: number | null;
+  deltaPercent: number | null;
+  topImproved: CategoryTrendItem | null;
+  topDeclined: CategoryTrendItem | null;
+  summary: string | null;
+}
