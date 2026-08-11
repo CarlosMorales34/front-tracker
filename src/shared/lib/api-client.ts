@@ -1,7 +1,10 @@
 import { cacheGet, cacheSet } from './offline/response-cache';
 import { enqueueMutation } from './offline/mutation-queue';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+// Rutas relativas (mismo origen) -- next.config.js proxea /api/* al backend
+// server-side, así el browser nunca hace un fetch cross-origin y la cookie
+// httpOnly de refresh_token viaja como first-party sin importar el
+// host/puerto (localhost, IP de LAN desde el celular, lo que sea).
 
 // Lanzada cuando una mutación (POST/PUT/PATCH/DELETE) no pudo llegar al
 // servidor por falta de red y se encoló para reintentarse sola al
@@ -36,7 +39,7 @@ async function parseBody<T>(response: Response): Promise<T> {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? 'GET').toUpperCase();
-  const url = `${API_BASE_URL}${path}`;
+  const url = path;
   const headers = { 'Content-Type': 'application/json', ...init?.headers } as Record<string, string>;
 
   if (method === 'GET') {

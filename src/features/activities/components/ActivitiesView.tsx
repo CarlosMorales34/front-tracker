@@ -19,6 +19,7 @@ import styles from './activities.module.css';
 import { CategoryDistributionCard } from './CategoryDistributionCard';
 import { CategorySection } from './CategorySection';
 import { DailyFeedbackSection } from './DailyFeedbackSection';
+import { DailyProductivityCard } from './DailyProductivityCard';
 import { DayChipStrip } from './DayChipStrip';
 import { ActivitiesTab } from './HoySemanaToggle';
 import { NewActivityModal } from './NewActivityModal';
@@ -34,7 +35,13 @@ const ZERO_WEEK = [0, 0, 0, 0, 0, 0, 0];
 const EMPTY_WEEK: (number | null)[] = [null, null, null, null, null, null, null];
 const COLLAPSED_CATEGORIES_STORAGE_KEY = 'vitalis.activities.collapsedCategories';
 
-type RoutineChanges = { name?: string; icon?: string; type?: RoutineType; linkedActivityId?: string | null };
+type RoutineChanges = {
+  name?: string;
+  icon?: string;
+  type?: RoutineType;
+  linkedActivityId?: string | null;
+  isSleep?: boolean;
+};
 
 interface ComparisonStat {
   label: string;
@@ -214,8 +221,8 @@ export function ActivitiesView() {
     return totals;
   }, [categories, weeklyActivities]);
 
-  const handleCreateRoutine = async (name: string, type: RoutineType, linkedActivityId: string | null) => {
-    const created = await activitiesApi.createRoutine(name, type, accessToken, 'moon', linkedActivityId);
+  const handleCreateRoutine = async (name: string, type: RoutineType, linkedActivityId: string | null, isSleep: boolean) => {
+    const created = await activitiesApi.createRoutine(name, type, accessToken, 'moon', linkedActivityId, isSleep);
     setRoutines((prev) => [...prev, created]);
     setRoutineModalOpen(false);
   };
@@ -240,7 +247,14 @@ export function ActivitiesView() {
     setRoutines((prev) =>
       prev.map((routine) =>
         routine.id === id
-          ? { ...routine, name: updated.name, icon: updated.icon, type: updated.type, linkedActivityId: updated.linkedActivityId }
+          ? {
+              ...routine,
+              name: updated.name,
+              icon: updated.icon,
+              type: updated.type,
+              linkedActivityId: updated.linkedActivityId,
+              isSleep: updated.isSleep,
+            }
           : routine,
       ),
     );
@@ -359,6 +373,8 @@ export function ActivitiesView() {
       {tab === 'hoy' ? (
         <>
           <DayChipStrip days={DAY_CHIPS} selectedDateIso={selectedDateIso} onSelect={setSelectedDateIso} />
+
+          <DailyProductivityCard key={selectedDateIso} dateIso={selectedDateIso} />
 
           <RoutineSection
             routines={routines}

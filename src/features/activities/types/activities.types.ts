@@ -13,9 +13,21 @@ export interface FixedRoutine {
   // Actividad a la que se reflejan los horarios de esta rutina (solo
   // aplica a rutinas type=range -- un horario "single" no tiene duración).
   linkedActivityId: string | null;
+  // Marca esta rutina como "sueño" para el indicador de productividad
+  // diaria -- sus horas se restan de la base de 24h del día en vez de
+  // contar como actividad realizada.
+  isSleep: boolean;
   sortOrder: number;
   // Vacío salvo que se haya pedido con ?date= (activitiesApi.listRoutines(date, ...)).
   times: RoutineTimeRange[];
+}
+
+export interface DailyProductivity {
+  logDate: string;
+  sleepHours: number;
+  activityHours: number;
+  targetHours: number;
+  percent: number | null;
 }
 
 export interface DayChip {

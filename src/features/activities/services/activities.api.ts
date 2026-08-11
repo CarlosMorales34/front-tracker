@@ -4,6 +4,7 @@ import {
   Activity,
   ActivityLog,
   ActivityTimeRange,
+  DailyProductivity,
   FixedRoutine,
   RoutineType,
   RoutineTimeRange,
@@ -35,6 +36,7 @@ interface RoutineDto {
   icon: string;
   type: RoutineType;
   linkedActivityId?: string | null;
+  isSleep?: boolean;
   sortOrder: number;
   times?: RoutineTimeRange[];
 }
@@ -49,6 +51,7 @@ const withHours = (dto: ActivityDto): Activity => ({
 const withTimes = (dto: RoutineDto): FixedRoutine => ({
   ...dto,
   linkedActivityId: dto.linkedActivityId ?? null,
+  isSleep: dto.isSleep ?? false,
   times: dto.times ?? [],
 });
 
@@ -122,10 +125,11 @@ export const activitiesApi = {
     accessToken?: string | null,
     icon = 'moon',
     linkedActivityId: string | null = null,
+    isSleep = false,
   ): Promise<FixedRoutine> => {
     const dto = await apiFetch<RoutineDto>('/api/fixed-routines', {
       method: 'POST',
-      body: JSON.stringify({ name, type, icon, linkedActivityId }),
+      body: JSON.stringify({ name, type, icon, linkedActivityId, isSleep }),
       headers: authHeaders(accessToken),
     });
     return withTimes(dto);
@@ -133,7 +137,7 @@ export const activitiesApi = {
 
   updateRoutine: async (
     id: string,
-    changes: { name?: string; icon?: string; type?: RoutineType; linkedActivityId?: string | null },
+    changes: { name?: string; icon?: string; type?: RoutineType; linkedActivityId?: string | null; isSleep?: boolean },
     accessToken?: string | null,
   ): Promise<FixedRoutine> => {
     const dto = await apiFetch<RoutineDto>(`/api/fixed-routines/${id}`, {
@@ -146,6 +150,11 @@ export const activitiesApi = {
 
   deleteRoutine: (id: string, accessToken?: string | null): Promise<void> =>
     apiFetch<void>(`/api/fixed-routines/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
+
+  getDailyProductivity: (dateIso: string, accessToken?: string | null): Promise<DailyProductivity> =>
+    apiFetch<DailyProductivity>(`/api/activities/daily-productivity?date=${dateIso}`, {
+      headers: authHeaders(accessToken),
+    }),
 
   deleteCategory: (id: string, accessToken?: string | null): Promise<void> =>
     apiFetch<void>(`/api/activity-categories/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),

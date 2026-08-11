@@ -10,7 +10,7 @@ interface NewRoutineModalProps {
   categories: Category[];
   activities: Activity[];
   onClose: () => void;
-  onCreate: (name: string, type: RoutineType, linkedActivityId: string | null) => void;
+  onCreate: (name: string, type: RoutineType, linkedActivityId: string | null, isSleep: boolean) => void;
 }
 
 export function NewRoutineModal({ categories, activities, onClose, onCreate }: NewRoutineModalProps) {
@@ -19,11 +19,12 @@ export function NewRoutineModal({ categories, activities, onClose, onCreate }: N
   // rangos de horas, no un instante único.
   const [type, setType] = useState<RoutineType>('range');
   const [linkedActivityId, setLinkedActivityId] = useState<string | null>(null);
+  const [isSleep, setIsSleep] = useState(false);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!name.trim()) return;
-    onCreate(name.trim(), type, linkedActivityId);
+    onCreate(name.trim(), type, linkedActivityId, isSleep);
   };
 
   return (
@@ -49,8 +50,9 @@ export function NewRoutineModal({ categories, activities, onClose, onCreate }: N
             onClick={() => {
               setType('single');
               // Un horario "single" no tiene hora de fin -> no hay duración
-              // que reflejar en una actividad.
+              // que reflejar en una actividad ni que contar como sueño.
               setLinkedActivityId(null);
+              setIsSleep(false);
             }}
           >
             Hora única
@@ -66,12 +68,18 @@ export function NewRoutineModal({ categories, activities, onClose, onCreate }: N
         </div>
 
         {type === 'range' && (
-          <ActivityLinkSelect
-            categories={categories}
-            activities={activities}
-            value={linkedActivityId}
-            onChange={setLinkedActivityId}
-          />
+          <>
+            <ActivityLinkSelect
+              categories={categories}
+              activities={activities}
+              value={linkedActivityId}
+              onChange={setLinkedActivityId}
+            />
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={isSleep} onChange={(event) => setIsSleep(event.target.checked)} />
+              Es tu rutina de sueño (para el indicador de productividad diaria)
+            </label>
+          </>
         )}
 
         <div className={styles.modalActions}>
