@@ -2,6 +2,7 @@ import { ComponentType, SVGProps } from 'react';
 import {
   CalendarCheckIcon,
   ChecklistIcon,
+  CompassIcon,
   HomeIcon,
   ReceiptIcon,
   ScaleIcon,
@@ -26,6 +27,7 @@ export interface NavItem {
 // es el texto que usa la tab bar mobile (más angosta que el sidebar).
 export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Inicio', shortLabel: 'Inicio', icon: HomeIcon },
+  { href: '/analytics', label: 'Analytics', shortLabel: 'BI', icon: CompassIcon },
   { href: '/actividades', label: 'Actividades diarias', shortLabel: 'Actividades', icon: ChecklistIcon, domain: 'activities' },
   { href: '/semanal', label: 'Registro semanal', shortLabel: 'Semanal', icon: CalendarCheckIcon, domain: 'activities' },
   { href: '/finanzas', label: 'Finanzas sem/quincenal', shortLabel: 'Finanzas', icon: WalletIcon, domain: 'finance' },

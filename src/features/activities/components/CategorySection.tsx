@@ -1,5 +1,6 @@
 import { KeyboardEvent, useState } from 'react';
 import { CaretDownIcon, ClockIcon, CloseIcon, PencilIcon, PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
+import { ActivitySuggestion } from '../../activity-suggestions/types/activity-suggestions.types';
 import { Activity, ActivityTimeRange, Category } from '../types/activities.types';
 import { formatHours, sumHours } from '../utils/hours';
 import styles from './activities.module.css';
@@ -17,6 +18,7 @@ interface CategorySectionProps {
   onSaveTimes: (activityId: string, times: { start: string; end: string }[]) => Promise<void>;
   onDeleteCategory: () => void;
   onDeleteActivity: (activityId: string) => void;
+  suggestionsByActivityId: Map<string, ActivitySuggestion>;
 }
 
 export function CategorySection({
@@ -32,6 +34,7 @@ export function CategorySection({
   onSaveTimes,
   onDeleteCategory,
   onDeleteActivity,
+  suggestionsByActivityId,
 }: CategorySectionProps) {
   const totalToday = sumHours(activities.map((activity) => activity.todayHours));
 
@@ -91,6 +94,7 @@ export function CategorySection({
                   onMoveDown={() => onMoveActivity(activity.id, 'down')}
                   onSaveTimes={(times) => onSaveTimes(activity.id, times)}
                   onDelete={() => onDeleteActivity(activity.id)}
+                  suggestion={suggestionsByActivityId.get(activity.id)}
                 />
               </div>
             ))}
@@ -142,6 +146,7 @@ function ActivityRow({
   onMoveDown,
   onSaveTimes,
   onDelete,
+  suggestion,
 }: {
   activity: Activity;
   canMoveUp: boolean;
@@ -150,6 +155,7 @@ function ActivityRow({
   onMoveDown: () => void;
   onSaveTimes: (times: { start: string; end: string }[]) => Promise<void>;
   onDelete: () => void;
+  suggestion?: ActivitySuggestion;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<DraftTime[]>(() => toManualDraft(activity.todayTimes));
@@ -249,6 +255,23 @@ function ActivityRow({
 
       {isEditing && (
         <div className={styles.routineEditor}>
+          {suggestion?.suggestedStartTime &&
+            suggestion.suggestedEndTime &&
+            draft.every((row) => !row.start && !row.end) && (
+              <button
+                type="button"
+                className={styles.suggestionFillChip}
+                onClick={() => {
+                  const filled = [{ start: suggestion.suggestedStartTime!, end: suggestion.suggestedEndTime! }];
+                  setDraft(filled);
+                  save(filled);
+                }}
+              >
+                <span className={styles.suggestionFillLabel}>Sugerido</span>
+                {suggestion.suggestedStartTime}–{suggestion.suggestedEndTime}
+              </button>
+            )}
+
           {routineTimes.length > 0 && (
             <p className={styles.cardNote}>
               {routineTimes.map((time, index) => (

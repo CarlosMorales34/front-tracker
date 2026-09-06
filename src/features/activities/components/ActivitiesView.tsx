@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
+import { activitySuggestionsApi } from '../../activity-suggestions/services/activity-suggestions.api';
+import { ActivitySuggestion } from '../../activity-suggestions/types/activity-suggestions.types';
 import { activitiesApi } from '../services/activities.api';
 import { Activity, ActivityLog, Category, FixedRoutine, RoutineTimeRange, RoutineType } from '../types/activities.types';
 import {
@@ -26,6 +28,8 @@ import { NewActivityModal } from './NewActivityModal';
 import { NewCategoryModal } from './NewCategoryModal';
 import { NewRoutineModal } from './NewRoutineModal';
 import { RoutineSection } from './RoutineSection';
+import { SuggestionBanner } from './SuggestionBanner';
+import { SuggestionEditor } from './SuggestionEditor';
 import { WeeklyComparisonCards } from './WeeklyComparisonCards';
 import { WeeklyTable } from './WeeklyTable';
 
@@ -107,6 +111,9 @@ export function ActivitiesView() {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
   const [activityModalCategoryId, setActivityModalCategoryId] = useState<string | null>(null);
 
+  const [suggestions, setSuggestions] = useState<ActivitySuggestion[]>([]);
+  const [reviewingSuggestionId, setReviewingSuggestionId] = useState<string | null>(null);
+
   const [weekActivityHours, setWeekActivityHours] = useState<Record<string, (number | null)[]>>({});
   const [productiveHoursByDay, setProductiveHoursByDay] = useState<number[]>(ZERO_WEEK);
   const [comparisonStats, setComparisonStats] = useState<{ week: ComparisonStat; month: ComparisonStat } | null>(null);
@@ -161,6 +168,29 @@ export function ActivitiesView() {
   useEffect(() => {
     window.localStorage.setItem(COLLAPSED_CATEGORIES_STORAGE_KEY, JSON.stringify([...collapsedCategoryIds]));
   }, [collapsedCategoryIds]);
+
+  const loadSuggestions = useCallback(async () => {
+    try {
+      setSuggestions(await activitySuggestionsApi.listPending(accessToken));
+    } catch {
+      // Sugerencias son un plus -- si falla, no debe tumbar el resto de la vista.
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    loadSuggestions();
+    // Recalcula en segundo plano sin bloquear nada ya renderizado (el
+    // detector puede tardar con historiales grandes) -- si salen
+    // sugerencias nuevas, se agregan a la lista ya visible.
+    activitySuggestionsApi
+      .generate(accessToken)
+      .then((created) => {
+        if (created.length > 0) loadSuggestions();
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
 
   const loadWeekTab = useCallback(async () => {
     const today = getTodayIso();
@@ -355,6 +385,48 @@ export function ActivitiesView() {
     );
   };
 
+  const handleDismissSuggestion = async (id: string) => {
+    await activitySuggestionsApi.dismiss(id, accessToken);
+    setSuggestions((prev) => prev.filter((suggestion) => suggestion.id !== id));
+    if (reviewingSuggestionId === id) setReviewingSuggestionId(null);
+  };
+
+  const handleAcceptSuggestion = async (finalValues: Record<string, unknown>) => {
+    const suggestion = suggestions.find((item) => item.id === reviewingSuggestionId);
+    if (!suggestion) return;
+    await activitySuggestionsApi.accept(suggestion.id, { finalValues }, accessToken);
+    setSuggestions((prev) => prev.filter((item) => item.id !== suggestion.id));
+    setReviewingSuggestionId(null);
+    // create_routine sí crea algo real (la FixedRoutine) -- hay que refrescar
+    // para que aparezca de inmediato en RoutineSection.
+    if (suggestion.suggestionType === 'create_routine') {
+      await loadRoutines(selectedDateIso);
+    }
+  };
+
+  const activityNameById = useMemo(() => new Map(activities.map((activity) => [activity.id, activity.name])), [activities]);
+  const categoryNameById = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories]);
+  const routineNameById = useMemo(() => new Map(routines.map((routine) => [routine.id, routine.name])), [routines]);
+  const suggestionsByActivityId = useMemo(() => {
+    const map = new Map<string, ActivitySuggestion>();
+    for (const suggestion of suggestions) {
+      if (suggestion.activityId) map.set(suggestion.activityId, suggestion);
+    }
+    return map;
+  }, [suggestions]);
+  const reviewingSuggestion = suggestions.find((suggestion) => suggestion.id === reviewingSuggestionId) ?? null;
+
+  // 'update_routine' no tiene activityId/categoryId (aplica a una rutina
+  // fija ya existente) -- se muestra el nombre de la rutina como "actividad"
+  // y "Rutina fija" como equivalente de categoría, para reusar el mismo
+  // banner/editor sin bifurcar el componente por tipo de sugerencia.
+  const suggestionPrimaryName = (suggestion: ActivitySuggestion): string =>
+    (suggestion.activityId && activityNameById.get(suggestion.activityId)) ||
+    (suggestion.routineId && routineNameById.get(suggestion.routineId)) ||
+    'Actividad';
+  const suggestionSecondaryName = (suggestion: ActivitySuggestion): string =>
+    suggestion.routineId ? 'Rutina fija' : (suggestion.categoryId && categoryNameById.get(suggestion.categoryId)) || '';
+
   const activityModalCategory = categories.find((category) => category.id === activityModalCategoryId);
 
   if (isLoading) {
@@ -374,7 +446,18 @@ export function ActivitiesView() {
         <>
           <DayChipStrip days={DAY_CHIPS} selectedDateIso={selectedDateIso} onSelect={setSelectedDateIso} />
 
-          <DailyProductivityCard key={selectedDateIso} dateIso={selectedDateIso} />
+          <DailyProductivityCard key={`productivity-${selectedDateIso}`} dateIso={selectedDateIso} />
+
+          {suggestions.map((suggestion) => (
+            <SuggestionBanner
+              key={suggestion.id}
+              suggestion={suggestion}
+              activityName={suggestionPrimaryName(suggestion)}
+              categoryName={suggestionSecondaryName(suggestion)}
+              onReview={() => setReviewingSuggestionId(suggestion.id)}
+              onDismiss={() => handleDismissSuggestion(suggestion.id)}
+            />
+          ))}
 
           <RoutineSection
             routines={routines}
@@ -405,6 +488,7 @@ export function ActivitiesView() {
                 onSaveTimes={handleSaveActivityTimes}
                 onDeleteCategory={() => handleDeleteCategory(category.id)}
                 onDeleteActivity={handleDeleteActivity}
+                suggestionsByActivityId={suggestionsByActivityId}
               />
             ))
           )}
@@ -418,7 +502,7 @@ export function ActivitiesView() {
             + Nueva categoría
           </button>
 
-          <DailyFeedbackSection key={selectedDateIso} note={feedbackNote} onSave={handleSaveFeedback} />
+          <DailyFeedbackSection key={`feedback-${selectedDateIso}`} note={feedbackNote} onSave={handleSaveFeedback} />
         </>
       ) : (
         <>
@@ -453,6 +537,15 @@ export function ActivitiesView() {
           categoryName={activityModalCategory.name}
           onClose={() => setActivityModalCategoryId(null)}
           onCreate={handleCreateActivity}
+        />
+      )}
+      {reviewingSuggestion && (
+        <SuggestionEditor
+          suggestion={reviewingSuggestion}
+          activityName={suggestionPrimaryName(reviewingSuggestion)}
+          categoryName={suggestionSecondaryName(reviewingSuggestion)}
+          onClose={() => setReviewingSuggestionId(null)}
+          onAccept={handleAcceptSuggestion}
         />
       )}
     </div>

@@ -844,3 +844,137 @@
     grid-template-columns: 180px 1fr 50px;
   }
 }
+
+/* --- Sugerencias (banner + editor) --- */
+
+.suggestionBanner {
+  background: var(--color-bg-elevated);
+  border: 1px dashed var(--color-border);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+}
+
+.suggestionBannerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.suggestionBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-accent);
+}
+
+.suggestionBannerBody {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.suggestionActivityName {
+  margin: 0 0 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.suggestionBannerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.suggestionConfidence {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.suggestionReviewButton {
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.suggestionReviewButton:hover {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.suggestionDaysRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.suggestionDayChip {
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.suggestionDayChip[data-selected='true'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.suggestionTimeRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.suggestionCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+/* Autocompletado dentro del editor de horas de una actividad -- "Sugerido"
+   es una etiqueta discreta (no un botón grande "Usar"), y solo se ofrece
+   cuando el día todavía no tiene ningún horario capturado. */
+.suggestionFillChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  border: 1px dashed var(--color-accent);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  font-family: inherit;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 0.4rem;
+}
+
+.suggestionFillLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}

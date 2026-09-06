@@ -7,8 +7,8 @@ import { filterNavItemsByModules, NAV_ITEMS } from './nav-items';
 import styles from './BottomTabBar.module.css';
 
 // Navegación mobile (< md, ver Sidebar.module.css para el breakpoint
-// espejo). El toggle de tema no vive acá (la barra ya está justa con 6
-// íconos, igual que en el mockup) — se muestra flotante en DashboardShell.
+// espejo). El toggle de tema no vive acá para mantener la barra enfocada
+// en destinos principales; se muestra flotante en DashboardShell.
 export function BottomTabBar() {
   const pathname = usePathname();
   const { modules } = useAuth();
