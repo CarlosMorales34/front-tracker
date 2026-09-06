@@ -53,6 +53,7 @@ interface GoogleSignInButtonProps {
 // combine razonablemente con el tema oscuro de la app.
 export function GoogleSignInButton({ onCredential, onError }: GoogleSignInButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasRenderedRef = useRef(false);
   const [clientId] = useState(() => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? '');
 
   useEffect(() => {
@@ -65,11 +66,12 @@ export function GoogleSignInButton({ onCredential, onError }: GoogleSignInButton
 
     loadGisScript()
       .then(() => {
-        if (cancelled || !containerRef.current || !window.google) return;
+        if (cancelled || !containerRef.current || !window.google || hasRenderedRef.current) return;
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: (response) => onCredential(response.credential),
         });
+        containerRef.current.replaceChildren();
         window.google.accounts.id.renderButton(containerRef.current, {
           type: 'standard',
           theme: 'filled_black',
@@ -79,6 +81,7 @@ export function GoogleSignInButton({ onCredential, onError }: GoogleSignInButton
           logo_alignment: 'left',
           width: containerRef.current.offsetWidth || 320,
         });
+        hasRenderedRef.current = true;
       })
       .catch((error: Error) => onError?.(error.message));
 

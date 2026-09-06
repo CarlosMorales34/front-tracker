@@ -28,7 +28,6 @@ import { NewActivityModal } from './NewActivityModal';
 import { NewCategoryModal } from './NewCategoryModal';
 import { NewRoutineModal } from './NewRoutineModal';
 import { RoutineSection } from './RoutineSection';
-import { SuggestionBanner } from './SuggestionBanner';
 import { SuggestionEditor } from './SuggestionEditor';
 import { WeeklyComparisonCards } from './WeeklyComparisonCards';
 import { WeeklyTable } from './WeeklyTable';
@@ -397,11 +396,29 @@ export function ActivitiesView() {
     await activitySuggestionsApi.accept(suggestion.id, { finalValues }, accessToken);
     setSuggestions((prev) => prev.filter((item) => item.id !== suggestion.id));
     setReviewingSuggestionId(null);
-    // create_routine sí crea algo real (la FixedRoutine) -- hay que refrescar
-    // para que aparezca de inmediato en RoutineSection.
-    if (suggestion.suggestionType === 'create_routine') {
+    // create_routine/update_routine modifican rutinas reales -- hay que
+    // refrescar para que el horario sugerido aparezca de inmediato.
+    if (suggestion.suggestionType === 'create_routine' || suggestion.suggestionType === 'update_routine') {
       await loadRoutines(selectedDateIso);
     }
+  };
+
+  const handleApplyRoutineSuggestion = async (suggestion: ActivitySuggestion) => {
+    await activitySuggestionsApi.accept(
+      suggestion.id,
+      {
+        finalValues: {
+          suggestedDays: suggestion.suggestedDays,
+          suggestedStartTime: suggestion.suggestedStartTime,
+          suggestedEndTime: suggestion.suggestedEndTime,
+          logDate: selectedDateIso,
+        },
+      },
+      accessToken,
+    );
+    setSuggestions((prev) => prev.filter((item) => item.id !== suggestion.id));
+    await loadRoutines(selectedDateIso);
+    await loadActivities(selectedDateIso);
   };
 
   const activityNameById = useMemo(() => new Map(activities.map((activity) => [activity.id, activity.name])), [activities]);
@@ -411,6 +428,13 @@ export function ActivitiesView() {
     const map = new Map<string, ActivitySuggestion>();
     for (const suggestion of suggestions) {
       if (suggestion.activityId) map.set(suggestion.activityId, suggestion);
+    }
+    return map;
+  }, [suggestions]);
+  const suggestionsByRoutineId = useMemo(() => {
+    const map = new Map<string, ActivitySuggestion>();
+    for (const suggestion of suggestions) {
+      if (suggestion.routineId) map.set(suggestion.routineId, suggestion);
     }
     return map;
   }, [suggestions]);
@@ -448,17 +472,6 @@ export function ActivitiesView() {
 
           <DailyProductivityCard key={`productivity-${selectedDateIso}`} dateIso={selectedDateIso} />
 
-          {suggestions.map((suggestion) => (
-            <SuggestionBanner
-              key={suggestion.id}
-              suggestion={suggestion}
-              activityName={suggestionPrimaryName(suggestion)}
-              categoryName={suggestionSecondaryName(suggestion)}
-              onReview={() => setReviewingSuggestionId(suggestion.id)}
-              onDismiss={() => handleDismissSuggestion(suggestion.id)}
-            />
-          ))}
-
           <RoutineSection
             routines={routines}
             categories={categories}
@@ -468,6 +481,9 @@ export function ActivitiesView() {
             onDelete={handleDeleteRoutine}
             onSaveTimes={handleSaveRoutineTimes}
             onUpdateRoutine={handleUpdateRoutine}
+            suggestionsByRoutineId={suggestionsByRoutineId}
+            onApplySuggestion={handleApplyRoutineSuggestion}
+            onDismissSuggestion={handleDismissSuggestion}
           />
 
           {categories.length === 0 ? (
@@ -544,6 +560,7 @@ export function ActivitiesView() {
           suggestion={reviewingSuggestion}
           activityName={suggestionPrimaryName(reviewingSuggestion)}
           categoryName={suggestionSecondaryName(reviewingSuggestion)}
+          selectedDateIso={selectedDateIso}
           onClose={() => setReviewingSuggestionId(null)}
           onAccept={handleAcceptSuggestion}
         />

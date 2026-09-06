@@ -10,6 +10,7 @@ import {
   SunIcon,
   TrashIcon,
 } from '../../../shared/components/icons/icons';
+import { ActivitySuggestion } from '../../activity-suggestions/types/activity-suggestions.types';
 import { Activity, Category, FixedRoutine, RoutineTimeRange, RoutineType } from '../types/activities.types';
 import { computeDurationHours, formatHours, sumHours } from '../utils/hours';
 import styles from './activities.module.css';
@@ -32,6 +33,9 @@ interface RoutineSectionProps {
   onDelete: (id: string) => void;
   onSaveTimes: (id: string, times: RoutineTimeRange[]) => Promise<void>;
   onUpdateRoutine: (id: string, changes: RoutineChanges) => Promise<void>;
+  suggestionsByRoutineId: Map<string, ActivitySuggestion>;
+  onApplySuggestion: (suggestion: ActivitySuggestion) => Promise<void>;
+  onDismissSuggestion: (suggestionId: string) => Promise<void>;
 }
 
 export function RoutineSection({
@@ -43,6 +47,9 @@ export function RoutineSection({
   onDelete,
   onSaveTimes,
   onUpdateRoutine,
+  suggestionsByRoutineId,
+  onApplySuggestion,
+  onDismissSuggestion,
 }: RoutineSectionProps) {
   return (
     <section>
@@ -67,6 +74,9 @@ export function RoutineSection({
               onDelete={() => onDelete(routine.id)}
               onSaveTimes={(times) => onSaveTimes(routine.id, times)}
               onUpdateRoutine={(changes) => onUpdateRoutine(routine.id, changes)}
+              suggestion={suggestionsByRoutineId.get(routine.id)}
+              onApplySuggestion={onApplySuggestion}
+              onDismissSuggestion={onDismissSuggestion}
             />
           ))}
         </div>
@@ -115,6 +125,9 @@ function RoutineRow({
   onDelete,
   onSaveTimes,
   onUpdateRoutine,
+  suggestion,
+  onApplySuggestion,
+  onDismissSuggestion,
 }: {
   routine: FixedRoutine;
   linkedActivityName: string | null;
@@ -123,6 +136,9 @@ function RoutineRow({
   onDelete: () => void;
   onSaveTimes: (times: RoutineTimeRange[]) => Promise<void>;
   onUpdateRoutine: (changes: RoutineChanges) => Promise<void>;
+  suggestion?: ActivitySuggestion;
+  onApplySuggestion: (suggestion: ActivitySuggestion) => Promise<void>;
+  onDismissSuggestion: (suggestionId: string) => Promise<void>;
 }) {
   const Icon = ROUTINE_ICONS[routine.icon] ?? MoonIcon;
   const [isEditing, setIsEditing] = useState(false);
@@ -163,6 +179,12 @@ function RoutineRow({
   };
 
   const duration = routine.type === 'range' ? totalDurationHours(routine.times) : null;
+  const canUseSuggestedTime =
+    !isEditing &&
+    routine.times.length === 0 &&
+    suggestion?.suggestionType === 'update_routine' &&
+    suggestion.suggestedStartTime &&
+    suggestion.suggestedEndTime;
 
   return (
     <div className={styles.routineRow}>
@@ -223,6 +245,30 @@ function RoutineRow({
           <TrashIcon />
         </button>
       </div>
+
+      {canUseSuggestedTime && (
+        <div className={styles.inlineSuggestion}>
+          <div>
+            <span className={styles.inlineSuggestionLabel}>Sugerido por tus datos</span>
+            <strong>
+              {suggestion.suggestedStartTime}–{suggestion.suggestedEndTime}
+            </strong>
+          </div>
+          <div className={styles.inlineSuggestionActions}>
+            <button type="button" className={styles.suggestionReviewButton} onClick={() => void onApplySuggestion(suggestion)}>
+              Usar
+            </button>
+            <button
+              type="button"
+              className={styles.iconOnlyButton}
+              onClick={() => void onDismissSuggestion(suggestion.id)}
+              aria-label={`Descartar sugerencia de ${routine.name}`}
+            >
+              <CloseIcon width={14} height={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {isEditing && (
         <div className={styles.routineEditor}>

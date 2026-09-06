@@ -11,6 +11,7 @@ interface SuggestionEditorProps {
   suggestion: ActivitySuggestion;
   activityName: string;
   categoryName: string;
+  selectedDateIso: string;
   onClose: () => void;
   onAccept: (finalValues: Record<string, unknown>) => Promise<void>;
 }
@@ -30,6 +31,7 @@ export function SuggestionEditor({
   suggestion,
   activityName,
   categoryName,
+  selectedDateIso,
   onClose,
   onAccept,
 }: SuggestionEditorProps) {
@@ -52,6 +54,7 @@ export function SuggestionEditor({
         suggestedDays: days,
         suggestedStartTime: startTime,
         suggestedEndTime: endTime,
+        logDate: selectedDateIso,
       };
       if (isRoutineCreation) {
         finalValues.routineName = routineName.trim() || activityName;

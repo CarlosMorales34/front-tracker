@@ -913,6 +913,39 @@
   color: var(--color-accent-contrast);
 }
 
+.inlineSuggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin: 0.65rem 0 0 2.2rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px dashed var(--color-accent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.inlineSuggestionLabel {
+  display: block;
+  color: var(--color-accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.inlineSuggestion strong {
+  display: block;
+  margin-top: 0.1rem;
+  color: var(--color-text);
+  font-size: 0.82rem;
+}
+
+.inlineSuggestionActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
 .suggestionDaysRow {
   display: flex;
   flex-wrap: wrap;
