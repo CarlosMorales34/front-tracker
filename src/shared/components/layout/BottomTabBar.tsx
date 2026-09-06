@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { NAV_ITEMS } from './nav-items';
+import { useAuth } from '../../../features/auth/context/AuthContext';
+import { filterNavItemsByModules, NAV_ITEMS } from './nav-items';
 import styles from './BottomTabBar.module.css';
 
 // Navegación mobile (< md, ver Sidebar.module.css para el breakpoint
@@ -10,10 +11,12 @@ import styles from './BottomTabBar.module.css';
 // íconos, igual que en el mockup) — se muestra flotante en DashboardShell.
 export function BottomTabBar() {
   const pathname = usePathname();
+  const { modules } = useAuth();
+  const navItems = filterNavItemsByModules(NAV_ITEMS, modules);
 
   return (
     <nav className={styles.tabBar} data-tour-scope="mobile-nav">
-      {NAV_ITEMS.map(({ href, shortLabel, icon: Icon }) => {
+      {navItems.map(({ href, shortLabel, icon: Icon }) => {
         const isActive = pathname === href;
         return (
           <Link key={href} href={href} className={styles.tab} data-active={isActive} data-tour={`nav-${href}`}>

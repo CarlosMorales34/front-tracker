@@ -7,9 +7,9 @@ import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draft';
 import { WEEKDAY_FULL_LABELS, getWeekdayOfDateIso } from '../../../shared/lib/week';
 import { CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutRoutine } from '../types/workout.types';
-import { sanitizeDecimal, sanitizeInt } from '../utils/numeric-input';
+import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
 import { formatMMSS, formatDurationLabel } from '../utils/workout-format';
-import styles from './weight.module.css';
+import styles from './training.module.css';
 
 interface DraftExercise {
   id: number;

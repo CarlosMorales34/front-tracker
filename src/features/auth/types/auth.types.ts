@@ -13,6 +13,12 @@ export interface LoginInput {
   password: string;
 }
 
+export interface UserModules {
+  hasActivities: boolean;
+  hasFinance: boolean;
+  hasHealth: boolean;
+}
+
 export interface RegisterInput {
   email: string;
   password: string;

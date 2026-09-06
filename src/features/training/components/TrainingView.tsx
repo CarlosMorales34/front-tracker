@@ -18,7 +18,7 @@ import {
   WorkoutRoutineInput,
 } from '../types/workout.types';
 import { formatDayLabel, formatDurationLabel, formatRepsLabel } from '../utils/workout-format';
-import styles from './weight.module.css';
+import styles from './training.module.css';
 import { NewWorkoutModal } from './NewWorkoutModal';
 import { NewWorkoutRoutineModal } from './NewWorkoutRoutineModal';
 import { RoutinesSection } from './RoutinesSection';
@@ -31,7 +31,7 @@ function pickDefaultDay(weekStartIso: string): string {
   return chips.find((day) => day.dateIso === today)?.dateIso ?? chips[0]!.dateIso;
 }
 
-export function WorkoutsTab() {
+export function TrainingView() {
   const { accessToken } = useAuth();
   const confirm = useConfirm();
   const [weekStart, setWeekStart] = useState(getCurrentWeekStartIso());

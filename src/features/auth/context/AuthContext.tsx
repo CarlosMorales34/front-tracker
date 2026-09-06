@@ -2,12 +2,18 @@
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authApi } from '../services/auth.api';
-import { LoginInput, RegisterInput, User } from '../types/auth.types';
+import { userModulesApi } from '../services/user-modules.api';
+import { LoginInput, RegisterInput, User, UserModules } from '../types/auth.types';
 
 interface AuthContextValue {
   user: User | null;
   accessToken: string | null;
   isLoading: boolean;
+  // null mientras se resuelve sesión/carga por primera vez -- Sidebar y
+  // BottomTabBar tratan null como "mostrar todo" para no parpadear items
+  // que luego sí están habilitados.
+  modules: UserModules | null;
+  updateModules: (modules: UserModules) => Promise<void>;
   login: (input: LoginInput) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
@@ -44,6 +50,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [modules, setModules] = useState<UserModules | null>(null);
+
+  // Se resuelve aparte del user/accessToken (no viene en el JWT ni en el
+  // response de login/register) para poder cambiarse después desde Ajustes
+  // sin necesitar un nuevo login -- ver GetUserModuleSettingsUseCase.
+  useEffect(() => {
+    if (!accessToken) {
+      setModules(null);
+      return;
+    }
+    let cancelled = false;
+    userModulesApi.get(accessToken).then((result) => {
+      if (!cancelled) setModules(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+
+  const updateModules = useCallback(
+    async (next: UserModules) => {
+      const saved = await userModulesApi.update(next, accessToken);
+      setModules(saved);
+    },
+    [accessToken],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -97,8 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, accessToken, isLoading, login, loginWithGoogle, register, logout }),
-    [user, accessToken, isLoading, login, loginWithGoogle, register, logout]
+    () => ({ user, accessToken, isLoading, modules, updateModules, login, loginWithGoogle, register, logout }),
+    [user, accessToken, isLoading, modules, updateModules, login, loginWithGoogle, register, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

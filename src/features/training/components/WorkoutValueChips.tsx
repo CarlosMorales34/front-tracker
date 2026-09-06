@@ -1,4 +1,4 @@
-import styles from './weight.module.css';
+import styles from './training.module.css';
 
 interface WorkoutValueChipsProps {
   points: { label: string; value: number | null }[];

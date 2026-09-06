@@ -1,5 +1,5 @@
 import { WeekDayChip } from '../../../shared/lib/week';
-import styles from './weight.module.css';
+import styles from './training.module.css';
 
 interface WorkoutDayChipStripProps {
   days: WeekDayChip[];

@@ -1,0 +1,96 @@
+/* Cards de "Tus módulos" son <Link>, no <div> -- necesitan su propio
+   display:block/text-decoration:none, igual que StatsRow.tsx hace con
+   dashboard.module.css (uiStyles.card no los define porque ahí siempre
+   envuelve un <div>). Color explícito en cada nodo de texto (no solo
+   `color: inherit` en el <a>) a propósito: así ningún hijo depende de la
+   herencia para no heredar el azul/subrayado default del navegador. */
+.moduleCard {
+  display: block;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.moduleCard:hover {
+  border-color: var(--color-accent);
+}
+
+.moduleCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.moduleIconBadge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: var(--color-accent);
+}
+
+.moduleCardHeaderText {
+  flex: 1;
+  min-width: 0;
+}
+
+.moduleCardTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.moduleCardSubtitle {
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.moduleCardChevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+/* Separa visualmente el header (icono + título, siempre igual) del
+   contenido variable de cada módulo (meta/avance o entrenamiento de hoy) --
+   sin esto la tarjeta se sentía como un solo bloque de texto corrido. */
+.moduleCardBody {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.goalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.quickActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.quickActionPrimary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}

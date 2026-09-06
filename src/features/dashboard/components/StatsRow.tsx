@@ -43,7 +43,7 @@ export function StatsRow({
           <p className={styles.cardNote}>Registra ingresos o gastos en Finanzas para ver tu balance del mes.</p>
         )}
       </Link>
-      <Link href="/peso" className={styles.card}>
+      <Link href="/salud/progreso" className={styles.card}>
         <p className={styles.cardLabel}>Peso actual</p>
         {currentWeightHasData && currentWeightKg !== null ? (
           <>
@@ -51,7 +51,7 @@ export function StatsRow({
             <p className={styles.cardNote}>{weightNote}</p>
           </>
         ) : (
-          <p className={styles.cardNote}>Registra tu peso en Peso mensual para verlo aquí.</p>
+          <p className={styles.cardNote}>Registra tu peso en Salud para verlo aquí.</p>
         )}
       </Link>
     </div>

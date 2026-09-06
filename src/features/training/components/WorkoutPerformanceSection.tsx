@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { WorkoutPerformance } from '../types/workout.types';
 import { formatDayLabel } from '../utils/workout-format';
-import styles from './weight.module.css';
+import styles from './training.module.css';
 import { WorkoutLineChart } from './WorkoutLineChart';
 import { WorkoutValueChips } from './WorkoutValueChips';
 

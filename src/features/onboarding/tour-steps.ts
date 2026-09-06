@@ -120,18 +120,18 @@ export const TOUR_STEPS: TourStepConfig[] = [
     content: 'Ingresos, gastos y lo que te sobra este mes, siempre a la vista mientras vas anotando.',
   },
   {
-    route: '/peso',
-    target: navTarget('/peso'),
+    route: '/salud',
+    target: navTarget('/salud'),
     placement: 'bottom',
-    title: 'Peso y Entrenamientos',
-    content: 'Esta sección lleva tu peso mensual y, en una segunda pestaña, tus sesiones de entrenamiento.',
+    title: 'Salud',
+    content: 'Esta sección junta tu Progreso corporal y tus Entrenamientos, cada uno en su propia pestaña.',
   },
   {
-    target: '[data-tour="peso-toggle"]',
+    target: '[data-tour="salud-toggle"]',
     placement: 'bottom',
-    title: 'Registro de peso / Entrenamientos',
+    title: 'Progreso / Entrenamientos',
     content:
-      'En "Registro de peso" llevas tu peso mes a mes con tu meta y tendencia. En "Entrenamientos" registras cada sesión (ejercicios, peso, repeticiones) y ves tu progresión con gráficas.',
+      'En "Progreso" registras mediciones (peso y más) con fecha real, tu meta y tu tendencia. En "Entrenamientos" registras cada sesión (ejercicios, peso, repeticiones) y ves tu progresión con gráficas.',
   },
   {
     route: '/ajustes',

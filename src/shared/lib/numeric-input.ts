@@ -2,7 +2,9 @@
 // cualquier caracter no numérico -- por eso los inputs que usan esto son
 // type="text" con inputMode numérico en vez de type="number" (ese fuerza
 // min/placeholder raros y no permite quedar en blanco entre un dígito y el
-// siguiente).
+// siguiente). Compartido entre features (Entrenamientos, Progreso
+// corporal) -- a diferencia de las clases CSS, que se duplican a propósito
+// por archivo en este repo, esto es lógica pura sin fricción para compartir.
 export function sanitizeInt(value: string): string {
   return value.replace(/\D/g, '');
 }

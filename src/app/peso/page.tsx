@@ -2,32 +2,23 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useAuth } from '../../features/auth/context/AuthContext';
-import { WeightView } from '../../features/weight/components/WeightView';
 import { DashboardShell } from '../../shared/components/layout/DashboardShell';
 import { Spinner } from '../../shared/components/ui/Spinner';
 
-export default function PesoPage() {
+// "Peso" se convirtió en "Salud" (Progreso corporal + Entrenamientos, ver
+// /salud/progreso y /salud/entrenamientos) -- esta ruta se conserva como
+// redirect en vez de borrarse, por si queda algún bookmark o link viejo
+// apuntando acá.
+export default function PesoRedirectPage() {
   const router = useRouter();
-  const { user, isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.replace('/login');
-    }
-  }, [isAuthLoading, user, router]);
-
-  if (isAuthLoading || !user) {
-    return (
-      <DashboardShell>
-        <Spinner />
-      </DashboardShell>
-    );
-  }
+    router.replace('/salud/progreso');
+  }, [router]);
 
   return (
     <DashboardShell>
-      <WeightView />
+      <Spinner />
     </DashboardShell>
   );
 }

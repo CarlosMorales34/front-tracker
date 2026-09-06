@@ -7,8 +7,8 @@ import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draft';
 import { WEEKDAY_FULL_LABELS } from '../../../shared/lib/week';
 import { WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
-import { sanitizeDecimal, sanitizeInt } from '../utils/numeric-input';
-import styles from './weight.module.css';
+import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
+import styles from './training.module.css';
 
 interface DraftRoutineExercise {
   id: number;

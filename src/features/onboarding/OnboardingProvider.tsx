@@ -5,12 +5,13 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import { EventData, Joyride, Locale, STATUS, Step, StepTarget } from 'react-joyride';
 import { useAuth } from '../auth/context/AuthContext';
 import { CATEGORY_TOUR_STEPS, EXPENSES_TOUR_STEPS } from './action-tour-steps';
+import { ModuleSelectionModal } from './ModuleSelectionModal';
 import { TOUR_STEPS, TourStepConfig } from './tour-steps';
 import { TourPromptModal } from './TourPromptModal';
 
 const STORAGE_KEY = 'vitalis_onboarding_completed';
 
-type Phase = 'idle' | 'welcome' | 'category-prompt' | 'category-tour' | 'expenses-prompt' | 'expenses-tour';
+type Phase = 'idle' | 'modules' | 'welcome' | 'category-prompt' | 'category-tour' | 'expenses-prompt' | 'expenses-tour';
 
 const ES_LOCALE: Locale = {
   back: 'Atrás',
@@ -123,7 +124,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
     const completed = window.localStorage.getItem(STORAGE_KEY);
-    if (!completed) setPhase('welcome');
+    // Configurar dominios va antes del tour guiado y separado de crear la
+    // cuenta -- registrarse solo pide correo/contraseña/nombre.
+    if (!completed) setPhase('modules');
   }, [user]);
 
   const restart = useCallback(() => {
@@ -194,6 +197,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           }}
         />
       )}
+
+      {user && phase === 'modules' && <ModuleSelectionModal onDone={() => setPhase('welcome')} />}
 
       {user && phase === 'category-prompt' && (
         <TourPromptModal

@@ -2,16 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../../../features/auth/context/AuthContext';
 import { LogoutButton } from '../../../features/auth/components/LogoutButton';
 import { CompassIcon, SettingsIcon } from '../icons/icons';
 import { ThemeToggle } from '../../theme/ThemeToggle';
-import { NAV_ITEMS } from './nav-items';
+import { filterNavItemsByModules, NAV_ITEMS } from './nav-items';
 import styles from './Sidebar.module.css';
 
 // Navegación desktop (≥ md, ver Sidebar.module.css). En mobile no se
 // renderiza — BottomTabBar cubre ese caso, ver DashboardShell.
 export function Sidebar() {
   const pathname = usePathname();
+  const { modules } = useAuth();
+  const navItems = filterNavItemsByModules(NAV_ITEMS, modules);
 
   return (
     <aside className={styles.sidebar} data-tour-scope="desktop-nav">
@@ -23,7 +26,7 @@ export function Sidebar() {
       </div>
 
       <nav className={styles.nav}>
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           return (
             <Link key={href} href={href} className={styles.navItem} data-active={isActive} data-tour={`nav-${href}`}>

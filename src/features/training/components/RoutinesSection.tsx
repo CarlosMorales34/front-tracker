@@ -2,7 +2,7 @@ import { PencilIcon, PlusIcon, TrashIcon } from '../../../shared/components/icon
 import { WEEKDAY_FULL_LABELS } from '../../../shared/lib/week';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { WorkoutRoutine } from '../types/workout.types';
-import styles from './weight.module.css';
+import styles from './training.module.css';
 
 interface RoutinesSectionProps {
   routines: WorkoutRoutine[];
