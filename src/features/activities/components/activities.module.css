@@ -925,11 +925,20 @@
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
+.inlineSuggestion[data-rest='true'] {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+}
+
 .inlineSuggestionLabel {
   display: block;
   color: var(--color-accent);
   font-size: 0.68rem;
   font-weight: 700;
+}
+
+.inlineSuggestion[data-rest='true'] .inlineSuggestionLabel {
+  color: var(--color-text-secondary);
 }
 
 .inlineSuggestion strong {

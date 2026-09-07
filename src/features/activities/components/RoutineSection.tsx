@@ -68,6 +68,7 @@ export function RoutineSection({
             <RoutineRow
               key={`${routine.id}-${selectedDateIso}`}
               routine={routine}
+              selectedDateIso={selectedDateIso}
               linkedActivityName={activities.find((activity) => activity.id === routine.linkedActivityId)?.name ?? null}
               categories={categories}
               activities={activities}
@@ -111,6 +112,12 @@ function totalDurationHours(times: RoutineTimeRange[]): number | null {
   return sumHours(durations);
 }
 
+function weekdayFromDateIso(dateIso: string): number {
+  const [year, month, day] = dateIso.split('-').map(Number);
+  if (!year || !month || !day) return -1;
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+}
+
 // Layout: [ícono + nombre] centrado verticalmente junto a una columna de
 // 1 línea (hora única) o 2 líneas (rango de horas, como "Trabajaste" con dos
 // turnos) -- align-items:center en la fila logra el centrado automático sin
@@ -119,6 +126,7 @@ function totalDurationHours(times: RoutineTimeRange[]): number | null {
 // Peso), y "+ Agregar turno" solo aplica a type=range.
 function RoutineRow({
   routine,
+  selectedDateIso,
   linkedActivityName,
   categories,
   activities,
@@ -130,6 +138,7 @@ function RoutineRow({
   onDismissSuggestion,
 }: {
   routine: FixedRoutine;
+  selectedDateIso: string;
   linkedActivityName: string | null;
   categories: Category[];
   activities: Activity[];
@@ -179,12 +188,14 @@ function RoutineRow({
   };
 
   const duration = routine.type === 'range' ? totalDurationHours(routine.times) : null;
-  const canUseSuggestedTime =
+  const isSuggestedWorkday = suggestion?.suggestedDays?.includes(weekdayFromDateIso(selectedDateIso)) ?? false;
+  const canShowInlineSuggestion =
     !isEditing &&
     routine.times.length === 0 &&
     suggestion?.suggestionType === 'update_routine' &&
     suggestion.suggestedStartTime &&
     suggestion.suggestedEndTime;
+  const canUseSuggestedTime = canShowInlineSuggestion && isSuggestedWorkday;
 
   return (
     <div className={styles.routineRow}>
