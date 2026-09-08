@@ -1,7 +1,11 @@
 export interface WorkoutExercise {
   id: string;
   name: string;
+  // Para ejercicios de peso corporal (dominadas, lagartijas), `weight` deja
+  // de ser "cuánto pesas" y pasa a ser peso ADICIONAL opcional (ej.
+  // dominadas lastradas) -- null/0 = sin peso extra.
   weight: number | null;
+  isBodyweight: boolean;
   sets: number;
   reps: number[];
 }
@@ -18,6 +22,7 @@ export interface Workout {
 export interface CreateWorkoutExerciseInput {
   name: string;
   weight: number | null;
+  isBodyweight: boolean;
   sets: number;
   reps: number[];
 }
@@ -43,6 +48,7 @@ export interface WorkoutRoutineExercise {
   targetSets: number;
   targetReps: number;
   suggestedWeight: number | null;
+  isBodyweight: boolean;
 }
 
 export interface WorkoutRoutine {
@@ -57,6 +63,7 @@ export interface WorkoutRoutineExerciseInput {
   targetSets: number;
   targetReps: number;
   suggestedWeight: number | null;
+  isBodyweight: boolean;
 }
 
 export interface WorkoutRoutineInput {
@@ -87,4 +94,10 @@ export interface ExercisePerformanceSeries {
 export interface WorkoutPerformance {
   sessions: SessionVolumePoint[];
   exercises: ExercisePerformanceSeries[];
+}
+
+// Racha de ENTRENAMIENTO -- distinta de la racha de Actividades del Home.
+export interface TrainingStreak {
+  days: number;
+  hasData: boolean;
 }

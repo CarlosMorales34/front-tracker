@@ -238,6 +238,26 @@
   color: var(--color-text-secondary);
 }
 
+.streakCard {
+  margin-bottom: 1rem;
+}
+
+.streakCaption {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.bodyweightToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
 .draftDivider {
   width: 1px;
   height: 16px;

@@ -23,7 +23,17 @@ export function formatDurationLabel(totalSeconds: number): string {
   return `${m} min ${String(s).padStart(2, '0')} s`;
 }
 
-export function formatRepsLabel(weight: number | null, reps: number[]): string {
-  const weightPart = weight !== null ? `${weight} lbs × ` : '';
+// `weight` es peso ADICIONAL cuando isBodyweight=true (ej. dominadas
+// lastradas) -- null/0 ahí se lee "Corporal" solo, no "0 lbs" (que sugeriría
+// que no se registró nada). Cuando isBodyweight=false, `weight` es el peso
+// absoluto de siempre.
+export function formatRepsLabel(weight: number | null, reps: number[], isBodyweight = false): string {
+  const weightPart = isBodyweight
+    ? weight !== null && weight > 0
+      ? `Corporal +${weight} lbs × `
+      : 'Corporal × '
+    : weight !== null
+      ? `${weight} lbs × `
+      : '';
   return `${weightPart}${reps.join('/')} reps`;
 }

@@ -35,7 +35,11 @@ export function RoutinesSection({ routines, onAddClick, onEdit, onDelete }: Rout
                 {routine.exercises.map((exercise) => (
                   <p key={exercise.id} className={styles.exerciseLine}>
                     <strong>{exercise.name}</strong> · {exercise.targetSets}x{exercise.targetReps}
-                    {exercise.suggestedWeight !== null ? ` @ ${exercise.suggestedWeight} lbs` : ''}
+                    {exercise.isBodyweight
+                      ? ` @ Corporal${exercise.suggestedWeight ? ` +${exercise.suggestedWeight} lbs` : ''}`
+                      : exercise.suggestedWeight !== null
+                        ? ` @ ${exercise.suggestedWeight} lbs`
+                        : ''}
                   </p>
                 ))}
               </div>

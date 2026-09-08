@@ -11,6 +11,7 @@ import { workoutApi } from '../services/workout.api';
 import { workoutRoutineApi } from '../services/workout-routine.api';
 import {
   CreateWorkoutInput,
+  TrainingStreak,
   UpdateWorkoutInput,
   Workout,
   WorkoutPerformance,
@@ -43,6 +44,7 @@ export function TrainingView() {
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
   const [isRoutineModalOpen, setRoutineModalOpen] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState<WorkoutRoutine | null>(null);
+  const [streak, setStreak] = useState<TrainingStreak | null>(null);
 
   const dayChips = useMemo(() => getWeekDayChips(weekStart), [weekStart]);
   const dayWorkouts = useMemo(
@@ -57,14 +59,16 @@ export function TrainingView() {
   }, [weekStart]);
 
   const load = useCallback(async () => {
-    const [weekWorkouts, workoutPerformance, workoutRoutines] = await Promise.all([
+    const [weekWorkouts, workoutPerformance, workoutRoutines, trainingStreak] = await Promise.all([
       workoutApi.listForWeek(weekStart, accessToken),
       workoutApi.getPerformance(accessToken),
       workoutRoutineApi.list(accessToken),
+      workoutApi.getStreak(accessToken),
     ]);
     setWorkouts(weekWorkouts);
     setPerformance(workoutPerformance);
     setRoutines(workoutRoutines);
+    setStreak(trainingStreak);
   }, [weekStart, accessToken]);
 
   useEffect(() => {
@@ -176,6 +180,21 @@ export function TrainingView() {
         </button>
       </div>
 
+      {streak && (
+        <div className={`${uiStyles.card} ${styles.streakCard}`}>
+          <p className={uiStyles.cardLabel}>Racha de entrenamiento</p>
+          {streak.hasData ? (
+            <p className={uiStyles.bigStat}>
+              🔥 {streak.days} <span className={styles.streakCaption}>día{streak.days === 1 ? '' : 's'} seguidos</span>
+            </p>
+          ) : (
+            <p className={uiStyles.cardNote}>
+              Entrena hoy (libre o con una rutina) para empezar tu racha. Se pierde si pasas un día sin entrenar.
+            </p>
+          )}
+        </div>
+      )}
+
       <WorkoutDayChipStrip days={dayChips} selectedDateIso={selectedDayIso} onSelect={setSelectedDayIso} />
 
       <RoutinesSection
@@ -195,7 +214,7 @@ export function TrainingView() {
                 <p className={styles.workoutDateLabel}>{formatDayLabel(workout.workoutDate)}</p>
                 {workout.exercises.map((exercise) => (
                   <p key={exercise.id} className={styles.exerciseLine}>
-                    <strong>{exercise.name}</strong> · {exercise.sets}x — {formatRepsLabel(exercise.weight, exercise.reps)}
+                    <strong>{exercise.name}</strong> · {exercise.sets}x — {formatRepsLabel(exercise.weight, exercise.reps, exercise.isBodyweight)}
                   </p>
                 ))}
               </div>

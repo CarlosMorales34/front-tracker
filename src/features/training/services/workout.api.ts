@@ -1,5 +1,5 @@
 import { apiFetch } from '../../../shared/lib/api-client';
-import { CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutPerformance } from '../types/workout.types';
+import { CreateWorkoutInput, TrainingStreak, UpdateWorkoutInput, Workout, WorkoutPerformance } from '../types/workout.types';
 
 function authHeaders(accessToken?: string | null): HeadersInit {
   return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
@@ -28,4 +28,7 @@ export const workoutApi = {
 
   getPerformance: (accessToken?: string | null): Promise<WorkoutPerformance> =>
     apiFetch<WorkoutPerformance>('/api/workouts/performance', { headers: authHeaders(accessToken) }),
+
+  getStreak: (accessToken?: string | null): Promise<TrainingStreak> =>
+    apiFetch<TrainingStreak>('/api/workouts/streak', { headers: authHeaders(accessToken) }),
 };

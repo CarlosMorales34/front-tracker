@@ -16,6 +16,7 @@ interface DraftRoutineExercise {
   targetSets: string;
   targetReps: string;
   suggestedWeight: string;
+  isBodyweight: boolean;
 }
 
 interface NewWorkoutRoutineModalProps {
@@ -41,6 +42,7 @@ function draftFromRoutine(routine: WorkoutRoutine): DraftRoutineExercise[] {
     targetSets: String(ex.targetSets),
     targetReps: String(ex.targetReps),
     suggestedWeight: ex.suggestedWeight === null ? '' : String(ex.suggestedWeight),
+    isBodyweight: ex.isBodyweight,
   }));
 }
 
@@ -50,7 +52,9 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
   const [weekday, setWeekday] = useState<number | null>(routine?.weekday ?? null);
   const nextIdRef = useRef(routine?.exercises.length ?? 1);
   const [draftExercises, setDraftExercises] = useState<DraftRoutineExercise[]>(() =>
-    routine ? draftFromRoutine(routine) : [{ id: 0, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '' }],
+    routine
+      ? draftFromRoutine(routine)
+      : [{ id: 0, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '', isBodyweight: false }],
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -91,7 +95,7 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
   const addDraftExercise = () => {
     setDraftExercises((prev) => [
       ...prev,
-      { id: nextIdRef.current++, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '' },
+      { id: nextIdRef.current++, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '', isBodyweight: false },
     ]);
   };
 
@@ -118,6 +122,7 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
           targetSets: Number(ex.targetSets) || 1,
           targetReps: Number(ex.targetReps) || 1,
           suggestedWeight: ex.suggestedWeight.trim() === '' ? null : Number(ex.suggestedWeight),
+          isBodyweight: ex.isBodyweight,
         })),
       });
       clearDraft(DRAFT_KEY);
@@ -192,6 +197,14 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
                 <TrashIcon />
               </button>
             </div>
+            <label className={styles.bodyweightToggle}>
+              <input
+                type="checkbox"
+                checked={ex.isBodyweight}
+                onChange={(event) => updateExercise(ex.id, { isBodyweight: event.target.checked })}
+              />
+              Peso corporal
+            </label>
             <div className={styles.draftExerciseRow}>
               <input
                 className={styles.draftSmallInput}
@@ -216,11 +229,11 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
                 className={styles.draftSmallInput}
                 type="text"
                 inputMode="decimal"
-                placeholder="peso sugerido"
+                placeholder={ex.isBodyweight ? 'extra' : 'peso sugerido'}
                 value={ex.suggestedWeight}
                 onChange={(event) => updateExercise(ex.id, { suggestedWeight: sanitizeDecimal(event.target.value) })}
               />
-              <span className={styles.draftInlineLabel}>lbs</span>
+              <span className={styles.draftInlineLabel}>{ex.isBodyweight ? 'lbs extra' : 'lbs'}</span>
             </div>
           </div>
         ))}

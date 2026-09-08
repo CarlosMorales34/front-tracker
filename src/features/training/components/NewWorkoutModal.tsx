@@ -15,6 +15,7 @@ interface DraftExercise {
   id: number;
   name: string;
   weight: string;
+  isBodyweight: boolean;
   sets: string;
   reps: string[];
 }
@@ -51,6 +52,7 @@ function draftExercisesFromRoutine(routine: WorkoutRoutine): DraftExercise[] {
     id: index,
     name: ex.name,
     weight: ex.suggestedWeight === null ? '' : String(ex.suggestedWeight),
+    isBodyweight: ex.isBodyweight,
     sets: String(ex.targetSets),
     reps: Array.from({ length: ex.targetSets }, () => String(ex.targetReps)),
   }));
@@ -69,6 +71,7 @@ function draftExercisesFromWorkout(workout: Workout): DraftExercise[] {
     id: index,
     name: ex.name,
     weight: ex.weight === null ? '' : String(ex.weight),
+    isBodyweight: ex.isBodyweight,
     sets: String(ex.sets),
     reps: ex.reps.map((rep) => String(rep)),
   }));
@@ -91,7 +94,9 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
 
   const nextIdRef = useRef(workout?.exercises.length ?? 1);
   const [draftExercises, setDraftExercises] = useState<DraftExercise[]>(() =>
-    workout ? draftExercisesFromWorkout(workout) : [{ id: 0, name: '', weight: '', sets: '1', reps: [''] }],
+    workout
+      ? draftExercisesFromWorkout(workout)
+      : [{ id: 0, name: '', weight: '', isBodyweight: false, sets: '1', reps: [''] }],
   );
   const [comments, setComments] = useState(workout?.comments ?? '');
   const [isSaving, setIsSaving] = useState(false);
@@ -192,7 +197,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
   const addDraftExercise = () => {
     setDraftExercises((prev) => [
       ...prev,
-      { id: nextIdRef.current++, name: '', weight: '', sets: '3', reps: ['', '', ''] },
+      { id: nextIdRef.current++, name: '', weight: '', isBodyweight: false, sets: '3', reps: ['', '', ''] },
     ]);
   };
 
@@ -257,6 +262,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
     const exercises = validExercises.map((ex) => ({
       name: ex.name.trim(),
       weight: ex.weight.trim() === '' ? null : Number(ex.weight),
+      isBodyweight: ex.isBodyweight,
       sets: Number(ex.sets) || ex.reps.length,
       reps: ex.reps.map((rep) => Number(rep) || 0),
     }));
@@ -394,16 +400,24 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
                 <TrashIcon />
               </button>
             </div>
+            <label className={styles.bodyweightToggle}>
+              <input
+                type="checkbox"
+                checked={ex.isBodyweight}
+                onChange={(event) => updateExercise(ex.id, { isBodyweight: event.target.checked })}
+              />
+              Peso corporal
+            </label>
             <div className={styles.draftExerciseRow}>
               <input
                 className={styles.draftSmallInput}
                 type="text"
                 inputMode="decimal"
-                placeholder="peso"
+                placeholder={ex.isBodyweight ? 'extra' : 'peso'}
                 value={ex.weight}
                 onChange={(event) => updateExercise(ex.id, { weight: sanitizeDecimal(event.target.value) })}
               />
-              <span className={styles.draftInlineLabel}>lbs ×</span>
+              <span className={styles.draftInlineLabel}>{ex.isBodyweight ? 'lbs extra ×' : 'lbs ×'}</span>
               <input
                 className={styles.draftSmallInput}
                 type="text"
