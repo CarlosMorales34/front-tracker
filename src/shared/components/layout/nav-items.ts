@@ -49,3 +49,16 @@ export function filterNavItemsByModules(
     return modules.hasHealth;
   });
 }
+
+// Los 4 destinos que se quedan con acceso directo en la barra inferior
+// mobile (el 5to slot es el botón central de acción rápida, no un destino
+// de navegación) -- todo lo demás en NAV_ITEMS se reubica en OverflowMenu.
+// Sidebar (desktop) sigue mostrando la lista completa sin este recorte.
+const BOTTOM_TAB_HREFS = ['/dashboard', '/actividades', '/finanzas', '/salud'];
+
+export function splitNavItemsForMobile(items: NavItem[]): { bottomItems: NavItem[]; overflowItems: NavItem[] } {
+  return {
+    bottomItems: items.filter((item) => BOTTOM_TAB_HREFS.includes(item.href)),
+    overflowItems: items.filter((item) => !BOTTOM_TAB_HREFS.includes(item.href)),
+  };
+}

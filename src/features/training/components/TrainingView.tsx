@@ -75,6 +75,18 @@ export function TrainingView() {
     if (accessToken) load();
   }, [accessToken, load]);
 
+  // Abre el modal de "nuevo entrenamiento" cuando se llega acá desde el
+  // botón central de acción rápida (ver QuickActionButton / quick-actions.ts),
+  // que navega a /salud/entrenamientos?crear=entrenamiento en vez de
+  // duplicar este estado local.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('crear') === 'entrenamiento') {
+      setModalOpen(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
   // Si no hay red, apiFetch encola la mutación sola y lanza
   // OfflineQueuedError en vez de un error real -- el dato ya quedó a salvo
   // en este dispositivo (ver shared/lib/offline/mutation-queue.ts), así que

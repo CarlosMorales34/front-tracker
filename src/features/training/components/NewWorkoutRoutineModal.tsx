@@ -200,8 +200,9 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
             <label className={styles.bodyweightToggle}>
               <input
                 type="checkbox"
+                className={styles.bodyweightCheckbox}
                 checked={ex.isBodyweight}
-                onChange={(event) => updateExercise(ex.id, { isBodyweight: event.target.checked })}
+                onChange={(event) => updateExercise(ex.id, { isBodyweight: event.target.checked, suggestedWeight: '' })}
               />
               Peso corporal
             </label>
@@ -224,16 +225,20 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
                 onChange={(event) => updateExercise(ex.id, { targetReps: sanitizeInt(event.target.value) })}
               />
               <span className={styles.draftInlineLabel}>reps</span>
-              <span className={styles.draftDivider} />
-              <input
-                className={styles.draftSmallInput}
-                type="text"
-                inputMode="decimal"
-                placeholder={ex.isBodyweight ? 'extra' : 'peso sugerido'}
-                value={ex.suggestedWeight}
-                onChange={(event) => updateExercise(ex.id, { suggestedWeight: sanitizeDecimal(event.target.value) })}
-              />
-              <span className={styles.draftInlineLabel}>{ex.isBodyweight ? 'lbs extra' : 'lbs'}</span>
+              {!ex.isBodyweight && (
+                <>
+                  <span className={styles.draftDivider} />
+                  <input
+                    className={styles.draftSmallInput}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="peso sugerido"
+                    value={ex.suggestedWeight}
+                    onChange={(event) => updateExercise(ex.id, { suggestedWeight: sanitizeDecimal(event.target.value) })}
+                  />
+                  <span className={styles.draftInlineLabel}>lbs</span>
+                </>
+              )}
             </div>
           </div>
         ))}

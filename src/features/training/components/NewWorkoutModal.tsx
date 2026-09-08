@@ -403,21 +403,26 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
             <label className={styles.bodyweightToggle}>
               <input
                 type="checkbox"
+                className={styles.bodyweightCheckbox}
                 checked={ex.isBodyweight}
-                onChange={(event) => updateExercise(ex.id, { isBodyweight: event.target.checked })}
+                onChange={(event) => updateExercise(ex.id, { isBodyweight: event.target.checked, weight: '' })}
               />
               Peso corporal
             </label>
             <div className={styles.draftExerciseRow}>
-              <input
-                className={styles.draftSmallInput}
-                type="text"
-                inputMode="decimal"
-                placeholder={ex.isBodyweight ? 'extra' : 'peso'}
-                value={ex.weight}
-                onChange={(event) => updateExercise(ex.id, { weight: sanitizeDecimal(event.target.value) })}
-              />
-              <span className={styles.draftInlineLabel}>{ex.isBodyweight ? 'lbs extra ×' : 'lbs ×'}</span>
+              {!ex.isBodyweight && (
+                <>
+                  <input
+                    className={styles.draftSmallInput}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="peso"
+                    value={ex.weight}
+                    onChange={(event) => updateExercise(ex.id, { weight: sanitizeDecimal(event.target.value) })}
+                  />
+                  <span className={styles.draftInlineLabel}>lbs ×</span>
+                </>
+              )}
               <input
                 className={styles.draftSmallInput}
                 type="text"

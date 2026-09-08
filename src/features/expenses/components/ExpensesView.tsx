@@ -50,6 +50,17 @@ export function ExpensesView() {
     if (accessToken) load();
   }, [accessToken, load]);
 
+  // Abre el modal de "nuevo gasto" cuando se llega acá desde el botón
+  // central de acción rápida (ver QuickActionButton / quick-actions.ts),
+  // que navega a /gastos?crear=gasto en vez de duplicar este estado local.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('crear') === 'gasto') {
+      setDailyModalOpen(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
   const todayTotal = dailyExpenses.reduce((sum, item) => sum + item.amount, 0);
   const fixedTotal = fixedExpenses.reduce((sum, item) => sum + item.amount, 0);
 

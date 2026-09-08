@@ -67,6 +67,18 @@ export function BodyProgressView() {
     // eslint-disable-line react-hooks/exhaustive-deps
   }, [period, accessToken, loadPeriod]);
 
+  // Abre el modal de "nueva medición" cuando se llega acá desde el botón
+  // central de acción rápida (ver QuickActionButton / quick-actions.ts),
+  // que navega a /salud/progreso?crear=peso en vez de duplicar este estado.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('crear') === 'peso') {
+      setEditingMeasurement(null);
+      setMeasurementModalOpen(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
   const handleSaveMeasurement = async (fields: MeasurementFields) => {
     if (editingMeasurement) {
       await bodyProgressApi.updateMeasurement(editingMeasurement.id, fields, accessToken);

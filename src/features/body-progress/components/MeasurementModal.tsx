@@ -38,7 +38,13 @@ export function MeasurementModal({ measurement, onClose, onSave }: MeasurementMo
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const fields: MeasurementFields = {
-      measuredAt: new Date(measuredAt).toISOString(),
+      // A propósito NO usa toISOString() (fuerza UTC) -- mismo criterio
+      // local-date-safe que shared/lib/week.ts. `measuredAt` ya es el literal
+      // local "YYYY-MM-DDTHH:mm" del input datetime-local; convertirlo a UTC
+      // y de regreso dependía de que el timezone del servidor coincidiera
+      // con el del usuario, lo que causaba que mediciones tarde en la noche
+      // se guardaran con la fecha corrida.
+      measuredAt: `${measuredAt}:00`,
       weightKg: parseOrNull(weightKg),
       bodyFatPercentage: parseOrNull(bodyFatPercentage),
       waistCm: parseOrNull(waistCm),

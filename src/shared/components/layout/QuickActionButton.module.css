@@ -1,0 +1,82 @@
+.container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+/* Sobresale un poco arriba de la barra (translateY negativo) sin cubrir
+   contenido -- .content ya reserva suficiente padding-bottom para esto -- y
+   se mantiene a distancia del indicador inferior del sistema porque no toca
+   el borde inferior, solo el superior de la barra. */
+.fab {
+  position: relative;
+  top: -14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.fabIcon {
+  display: flex;
+  transition: transform var(--duration-fast) ease;
+}
+
+.fabIcon[data-open='true'] {
+  transform: rotate(45deg);
+}
+
+.panel {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(300px, 80vw);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  z-index: 30;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.7rem 0.6rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.optionIcon {
+  display: flex;
+  color: var(--color-accent);
+}
+
+.optionLabel {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.optionDescription {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+}

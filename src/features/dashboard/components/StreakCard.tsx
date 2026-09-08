@@ -12,7 +12,7 @@ export function StreakCard({ days, hasData }: StreakCardProps) {
       <p className={styles.cardLabel}>Racha activa</p>
       {hasData ? (
         <p className={styles.bigStat}>
-          {days} <span className={styles.bigStatCaption}>días</span>
+          🔥 {days} <span className={styles.bigStatCaption}>días</span>
         </p>
       ) : (
         <p className={styles.cardNote}>
