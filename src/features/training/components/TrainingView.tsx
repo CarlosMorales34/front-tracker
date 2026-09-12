@@ -11,6 +11,7 @@ import { workoutApi } from '../services/workout.api';
 import { workoutRoutineApi } from '../services/workout-routine.api';
 import {
   CreateWorkoutInput,
+  TrainingSettings,
   TrainingStreak,
   UpdateWorkoutInput,
   Workout,
@@ -22,6 +23,7 @@ import { formatDayLabel, formatDurationLabel, formatRepsLabel } from '../utils/w
 import styles from './training.module.css';
 import { NewWorkoutModal } from './NewWorkoutModal';
 import { NewWorkoutRoutineModal } from './NewWorkoutRoutineModal';
+import { RestDaysSettings } from './RestDaysSettings';
 import { RoutinesSection } from './RoutinesSection';
 import { WorkoutDayChipStrip } from './WorkoutDayChipStrip';
 import { WorkoutPerformanceSection } from './WorkoutPerformanceSection';
@@ -45,6 +47,8 @@ export function TrainingView() {
   const [isRoutineModalOpen, setRoutineModalOpen] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState<WorkoutRoutine | null>(null);
   const [streak, setStreak] = useState<TrainingStreak | null>(null);
+  const [trainingSettings, setTrainingSettings] = useState<TrainingSettings | null>(null);
+  const [isSavingRestDays, setIsSavingRestDays] = useState(false);
 
   const dayChips = useMemo(() => getWeekDayChips(weekStart), [weekStart]);
   const dayWorkouts = useMemo(
@@ -59,16 +63,18 @@ export function TrainingView() {
   }, [weekStart]);
 
   const load = useCallback(async () => {
-    const [weekWorkouts, workoutPerformance, workoutRoutines, trainingStreak] = await Promise.all([
+    const [weekWorkouts, workoutPerformance, workoutRoutines, trainingStreak, settings] = await Promise.all([
       workoutApi.listForWeek(weekStart, accessToken),
       workoutApi.getPerformance(accessToken),
       workoutRoutineApi.list(accessToken),
       workoutApi.getStreak(accessToken),
+      workoutApi.getSettings(accessToken),
     ]);
     setWorkouts(weekWorkouts);
     setPerformance(workoutPerformance);
     setRoutines(workoutRoutines);
     setStreak(trainingStreak);
+    setTrainingSettings(settings);
   }, [weekStart, accessToken]);
 
   useEffect(() => {
@@ -150,6 +156,25 @@ export function TrainingView() {
     load();
   };
 
+  const handleToggleRestDay = async (weekday: number) => {
+    if (!trainingSettings) return;
+    const next = trainingSettings.restWeekdays.includes(weekday)
+      ? trainingSettings.restWeekdays.filter((day) => day !== weekday)
+      : [...trainingSettings.restWeekdays, weekday];
+    setTrainingSettings({ restWeekdays: next });
+    setIsSavingRestDays(true);
+    try {
+      await workoutApi.updateSettings({ restWeekdays: next }, accessToken);
+      const trainingStreak = await workoutApi.getStreak(accessToken);
+      setStreak(trainingStreak);
+    } catch (error) {
+      setTrainingSettings(trainingSettings);
+      ignoreIfQueued(error);
+    } finally {
+      setIsSavingRestDays(false);
+    }
+  };
+
   const handleDeleteRoutine = async (routine: WorkoutRoutine) => {
     const ok = await confirm(`Estás a punto de borrar la rutina "${routine.name}". ¿Estás seguro?`);
     if (!ok) return;
@@ -201,8 +226,16 @@ export function TrainingView() {
             </p>
           ) : (
             <p className={uiStyles.cardNote}>
-              Entrena hoy (libre o con una rutina) para empezar tu racha. Se pierde si pasas un día sin entrenar.
+              Entrena hoy (libre o con una rutina) para empezar tu racha. Se pierde si pasas un día sin entrenar
+              (salvo tus días de descanso).
             </p>
+          )}
+          {trainingSettings && (
+            <RestDaysSettings
+              restWeekdays={trainingSettings.restWeekdays}
+              onToggle={handleToggleRestDay}
+              isSaving={isSavingRestDays}
+            />
           )}
         </div>
       )}

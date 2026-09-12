@@ -101,3 +101,9 @@ export interface TrainingStreak {
   days: number;
   hasData: boolean;
 }
+
+// Días (0=domingo..6=sábado) que el usuario marcó como descanso -- no
+// rompen la racha de entrenamiento aunque no haya sesión ese día.
+export interface TrainingSettings {
+  restWeekdays: number[];
+}
