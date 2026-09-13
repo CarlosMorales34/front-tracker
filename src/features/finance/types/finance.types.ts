@@ -16,6 +16,9 @@ export interface MoneyEntry {
   amount: number;
   recurrence: MoneyEntryRecurrence;
   weekStartDate: string; // YYYY-MM-DD (sábado de la semana)
+  // Moneda vigente al momento de crearse -- inmutable después. null en filas
+  // muy viejas que no pudieron backfillearse.
+  currency: string | null;
 }
 
 export interface CreateMoneyEntryInput {
@@ -43,16 +46,21 @@ export interface FinanceAnnualIncome {
   amount: number;
   growthPercent: number | null;
   isLive: boolean;
+  // true = ese año mezcla monedas distintas entre sus ingresos -- amount no
+  // se puede mostrar como una cifra confiable en una sola moneda.
+  isMixedCurrency: boolean;
 }
 
 export interface FinanceSettings {
   debtTotal: number;
   currency: 'MXN' | 'USD';
   // Ancla para la numeración de semana en Finanzas (ej. "Sem 3") -- no
-  // afecta el agrupamiento sábado-a-viernes real de finance_entries.
+  // afecta el agrupamiento sábado-a-viernes real de finance_entries. Debe
+  // caer en sábado (el backend lo valida).
   week1AnchorDate: string | null;
-  // Saldo de cartera (liquidez: efectivo/débito). Corregible a mano; se
-  // ajusta solo al registrar/editar/borrar ingresos y gastos variables.
+  // Saldo de cartera (liquidez: efectivo/débito). Se ajusta solo al
+  // registrar/editar/borrar ingresos y gastos variables; para corregirlo a
+  // mano usar financeApi.reconcileWallet (deja rastro auditable).
   walletBalance: number;
 }
 
@@ -78,15 +86,28 @@ export interface UpdateCreditCardInput {
   name?: string;
   creditLimit?: number;
   dueDay?: number;
+  // Si viene, se aplica vía reconciliación auditable en vez de sobrescribir
+  // directo -- ver ReconcileWalletModal para el mismo patrón en cartera.
   amountOwed?: number;
+  reason?: string | null;
 }
 
 export interface DebtPayment {
   id: string;
   weekStartDate: string;
   amount: number;
+  interestAmount: number;
 }
 
+export interface CreateDebtPaymentInput {
+  weekStartDate: string;
+  amount: number;
+  interestAmount?: number;
+}
+
+// finance_savings_log -- ya no se escribe desde la UI (Ahorro pasa a ser
+// calculado, ver SavingsSummary), se deja el tipo por compatibilidad con el
+// endpoint que sigue existiendo.
 export interface SavingsEntry {
   id: string;
   weekStartDate: string;
@@ -99,15 +120,53 @@ export interface FinanceWeekSummary {
   weekStartDate: string;
   income: MoneyEntry[];
   totalIncome: number;
-  // Gastos diarios (fijos + variables) -- Finanzas ya no captura gastos.
+  // Incluye el interés de abonos a deuda de esta semana.
   totalExpense: number;
+  interestThisWeek: number;
+  balance: number;
   debtTotal: number;
   debtPaid: number;
   debtRemaining: number;
   weekAbono: number;
   savingsAccumulated: number;
   weekSavings: number;
-  currency: 'MXN' | 'USD';
+  // 'mixed' si los ingresos de la semana no comparten una sola moneda --
+  // en ese caso totalIncome/balance no se deben mostrar como cifra confiable.
+  currency: string;
   week1AnchorDate: string | null;
   walletBalance: number;
+  // Patrimonio neto = liquidez - deuda restante. NUNCA incluye crédito
+  // disponible (eso es capacidad de endeudarte, no capital propio).
+  netWorth: number;
+}
+
+// null = el usuario todavía no asignó presupuesto ese mes -- distinto de un
+// presupuesto real de $0 (nunca se muestra como si fuera $0).
+export interface MonthlyBudgetSummary {
+  year: number;
+  month: number;
+  budgetAmount: number | null;
+  currency: string | null;
+  monthExpenseTotal: number;
+  remaining: number | null;
+  percentUsed: number | null;
+}
+
+export interface SavingsSummary {
+  year: number;
+  accumulated: number;
+  thisMonth: number;
+}
+
+export type FinanceAdjustmentTarget = 'wallet' | 'credit_card';
+
+export interface FinanceAdjustment {
+  id: string;
+  target: FinanceAdjustmentTarget;
+  targetId: string | null;
+  previousAmount: number;
+  newAmount: number;
+  difference: number;
+  reason: string | null;
+  createdAt: string;
 }

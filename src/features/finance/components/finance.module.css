@@ -1,24 +1,3 @@
-.twoCol {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-@media (min-width: 700px) {
-  .twoCol {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-    align-items: start;
-  }
-}
-
-.colStack {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
 .week1AnchorRow {
   display: flex;
   align-items: center;
@@ -74,6 +53,114 @@
 .debtInput:focus {
   outline: none;
   border-color: var(--color-accent);
+}
+
+/* --- Resumen: flujo semanal + presupuesto mensual --- */
+
+.flowRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.budgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.budgetCaption {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.budgetProgressTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  overflow: hidden;
+  margin: 0.6rem 0;
+}
+
+.budgetProgressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-accent);
+}
+
+.budgetProgressFill[data-over='true'] {
+  background: #ef4444;
+}
+
+.budgetFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+/* --- Patrimonio: patrimonio neto, liquidez, deudas --- */
+
+.netWorthCard {
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.netWorthValue {
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin: 0.2rem 0 0;
+}
+
+.linkButton {
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.assetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.assetName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.15rem;
+}
+
+.assetAmount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* --- Ingresos: próxima ocurrencia de un ingreso recurrente --- */
+
+.nextOccurrenceNote {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  margin: -0.3rem 0 0.5rem;
 }
 
 /* --- Ingresos anuales (histórico año contra año) --- */
@@ -176,83 +263,6 @@
   text-align: center;
   color: var(--color-text-secondary);
   flex-shrink: 0;
-}
-
-/* --- Capital (Liquidez + Crédito), colapsable --- */
-
-.capitalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  width: 100%;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  flex-wrap: wrap;
-}
-
-.capitalHeaderLeft {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.capitalCollapseIcon {
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
-}
-
-.capitalCollapseIcon[data-collapsed='true'] {
-  transform: rotate(-90deg);
-}
-
-.collapseWrapper {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition: grid-template-rows var(--duration-base) var(--ease-in-out);
-}
-
-.collapseWrapper[data-collapsed='true'] {
-  grid-template-rows: 0fr;
-}
-
-.collapseInner {
-  overflow: hidden;
-  min-height: 0;
-}
-
-.capitalTotals {
-  display: flex;
-  gap: 0.9rem;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-  flex-wrap: wrap;
-}
-
-.capitalBody {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.capitalTotalRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--color-border);
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-}
-
-.capitalTotalValue {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--color-text);
 }
 
 /* --- Tarjetas de crédito --- */

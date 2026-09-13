@@ -100,11 +100,12 @@ export const TOUR_STEPS: TourStepConfig[] = [
     content: 'El control de tu dinero: cuánto entra, cuánto sale, y cuánto te queda disponible en tiempo real.',
   },
   {
+    route: '/finanzas/patrimonio',
     target: '[data-tour="finanzas-capital"]',
     placement: 'bottom',
-    title: 'Capital: presupuesto y tarjetas',
+    title: 'Patrimonio: liquidez y tarjetas',
     content:
-      'Tu presupuesto (liquidez) se ajusta solo cuando registras ingresos o gastos — corrígelo a mano si contaste tu dinero real. También llevas tus tarjetas de crédito aquí, para ver tu capital total.',
+      'Tu liquidez se ajusta sola cuando registras ingresos o gastos — concíliala a mano si contaste tu dinero real. También llevas tus tarjetas de crédito aquí; el crédito disponible se muestra aparte, nunca se suma a tu patrimonio.',
   },
   {
     route: '/gastos',

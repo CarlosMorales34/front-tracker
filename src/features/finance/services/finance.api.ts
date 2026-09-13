@@ -1,13 +1,17 @@
 import { apiFetch } from '../../../shared/lib/api-client';
 import {
+  CreateDebtPaymentInput,
   DebtPayment,
+  FinanceAdjustment,
   FinanceAnnualIncome,
   FinanceSettings,
   FinanceWeekSummary,
   MoneyEntry,
   MoneyEntryRecurrence,
   MoneyEntryType,
+  MonthlyBudgetSummary,
   SavingsEntry,
+  SavingsSummary,
 } from '../types/finance.types';
 
 function authHeaders(accessToken?: string | null): HeadersInit {
@@ -56,10 +60,10 @@ export const financeApi = {
   deleteEntry: (id: string, accessToken?: string | null): Promise<void> =>
     apiFetch<void>(`/api/finance/entries/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
 
-  addDebtPayment: (weekStartDate: string, amount: number, accessToken?: string | null): Promise<DebtPayment> =>
+  addDebtPayment: (input: CreateDebtPaymentInput, accessToken?: string | null): Promise<DebtPayment> =>
     apiFetch<DebtPayment>('/api/finance/debt-payments', {
       method: 'POST',
-      body: JSON.stringify({ weekStartDate, amount }),
+      body: JSON.stringify(input),
       headers: authHeaders(accessToken),
     }),
 
@@ -83,10 +87,36 @@ export const financeApi = {
   deleteAnnualIncome: (id: string, accessToken?: string | null): Promise<void> =>
     apiFetch<void>(`/api/finance/annual-income/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
 
-  setWallet: (balance: number, accessToken?: string | null): Promise<FinanceSettings> =>
-    apiFetch<FinanceSettings>('/api/finance/wallet', {
+  // Conciliación: registra la diferencia como FinanceAdjustment auditable y
+  // aplica el nuevo saldo -- reemplaza el antiguo setWallet({ balance }).
+  reconcileWallet: (
+    countedBalance: number,
+    reason: string | null,
+    accessToken?: string | null,
+  ): Promise<{ settings: FinanceSettings; adjustment: FinanceAdjustment }> =>
+    apiFetch<{ settings: FinanceSettings; adjustment: FinanceAdjustment }>('/api/finance/wallet', {
       method: 'PUT',
-      body: JSON.stringify({ balance }),
+      body: JSON.stringify({ countedBalance, reason }),
       headers: authHeaders(accessToken),
     }),
+
+  getMonthlyBudget: (year: number, month: number, accessToken?: string | null): Promise<MonthlyBudgetSummary> =>
+    apiFetch<MonthlyBudgetSummary>(`/api/finance/monthly-budget?year=${year}&month=${month}`, {
+      headers: authHeaders(accessToken),
+    }),
+
+  updateMonthlyBudget: (
+    year: number,
+    month: number,
+    amount: number,
+    accessToken?: string | null,
+  ): Promise<MonthlyBudgetSummary> =>
+    apiFetch<MonthlyBudgetSummary>('/api/finance/monthly-budget', {
+      method: 'PUT',
+      body: JSON.stringify({ year, month, amount }),
+      headers: authHeaders(accessToken),
+    }),
+
+  getSavingsSummary: (year: number, accessToken?: string | null): Promise<SavingsSummary> =>
+    apiFetch<SavingsSummary>(`/api/finance/savings-summary?year=${year}`, { headers: authHeaders(accessToken) }),
 };

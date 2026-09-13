@@ -2,12 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useAuth } from '../../features/auth/context/AuthContext';
-import { ResumenView } from '../../features/finance/components/ResumenView';
-import { DashboardShell } from '../../shared/components/layout/DashboardShell';
-import { Spinner } from '../../shared/components/ui/Spinner';
+import { useAuth } from '../../../features/auth/context/AuthContext';
+import { IngresosView } from '../../../features/finance/components/IngresosView';
+import { DashboardShell } from '../../../shared/components/layout/DashboardShell';
+import { Spinner } from '../../../shared/components/ui/Spinner';
 
-export default function FinanzasPage() {
+export default function FinanzasIngresosPage() {
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
 
@@ -27,7 +27,7 @@ export default function FinanzasPage() {
 
   return (
     <DashboardShell>
-      <ResumenView />
+      <IngresosView />
     </DashboardShell>
   );
 }

@@ -47,20 +47,27 @@ export function AnnualIncomeSection({ entries, currencySymbol, onSave, onDelete 
                 {entry.isLive && <span className={styles.liveBadge}>en vivo</span>}
               </span>
               <span className={styles.annualIncomeAmountWrap}>
-                {currencySymbol}
-                {entry.isLive ? (
-                  <span className={styles.annualIncomeAmountReadOnly}>{entry.amount.toLocaleString('es-MX')}</span>
+                {entry.isMixedCurrency ? (
+                  <span className={uiStyles.cardNote}>No calculable (monedas mezcladas)</span>
+                ) : entry.isLive ? (
+                  <>
+                    {currencySymbol}
+                    <span className={styles.annualIncomeAmountReadOnly}>{entry.amount.toLocaleString('es-MX')}</span>
+                  </>
                 ) : (
-                  <input
-                    className={styles.annualIncomeAmount}
-                    type="number"
-                    step="0.01"
-                    defaultValue={entry.amount}
-                    onBlur={(event) => {
-                      const value = Number(event.target.value);
-                      if (Number.isFinite(value) && value > 0 && value !== entry.amount) onSave(entry.year, value);
-                    }}
-                  />
+                  <>
+                    {currencySymbol}
+                    <input
+                      className={styles.annualIncomeAmount}
+                      type="number"
+                      step="0.01"
+                      defaultValue={entry.amount}
+                      onBlur={(event) => {
+                        const value = Number(event.target.value);
+                        if (Number.isFinite(value) && value > 0 && value !== entry.amount) onSave(entry.year, value);
+                      }}
+                    />
+                  </>
                 )}
               </span>
               {entry.growthPercent !== null ? (

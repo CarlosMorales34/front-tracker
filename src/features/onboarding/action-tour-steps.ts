@@ -50,7 +50,7 @@ export const CATEGORY_TOUR_STEPS: TourStepConfig[] = [
 
 export const EXPENSES_TOUR_STEPS: TourStepConfig[] = [
   {
-    route: '/finanzas',
+    route: '/finanzas/ingresos',
     target: '[data-tour="finanzas-new-income-button"]',
     placement: 'left',
     title: 'Registra tu primer sueldo',
