@@ -17,7 +17,7 @@ export function ResumenView() {
   const { accessToken } = useAuth();
   const [weekStartDate, setWeekStartDate] = useState(getCurrentWeekStartIso());
   const [summary, setSummary] = useState<FinanceWeekSummary | null>(null);
-  const [lastYearBalance, setLastYearBalance] = useState<number | null>(null);
+  const [lastYearSummary, setLastYearSummary] = useState<FinanceWeekSummary | null>(null);
   const [budget, setBudget] = useState<MonthlyBudgetSummary | null>(null);
   const [savings, setSavings] = useState<SavingsSummary | null>(null);
   const [anchorError, setAnchorError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function ResumenView() {
       financeApi.getSavingsSummary(year, accessToken),
     ]);
     setSummary(current);
-    setLastYearBalance(lastYear.balance);
+    setLastYearSummary(lastYear);
     setBudget(budgetSummary);
     setSavings(savingsSummary);
   }, [weekStartDate, accessToken]);
@@ -80,7 +80,12 @@ export function ResumenView() {
     ? getWeekNumberFromAnchor(weekStartDate, summary.week1AnchorDate)
     : getWeekNumberForYear(weekStartDate, weekStartDateLocal.getFullYear());
   const currentYear = weekStartDateLocal.getFullYear();
-  const vsLastYear = lastYearBalance !== null ? summary.balance - lastYearBalance : null;
+  // Solo se compara contra el año anterior si esa semana tuvo actividad real
+  // -- una semana sin ingresos ni gastos hace 52 semanas no es un balance de
+  // $0 confiable para comparar, es "sin datos" (regla: nunca mostrar $0
+  // cuando el estado real es "no calculable").
+  const lastYearHasData = lastYearSummary !== null && (lastYearSummary.income.length > 0 || lastYearSummary.totalExpense > 0);
+  const vsLastYear = lastYearHasData ? summary.balance - lastYearSummary!.balance : null;
 
   return (
     <div className={uiStyles.page}>
@@ -199,12 +204,12 @@ export function ResumenView() {
               {Math.abs(savings.thisMonth).toLocaleString('es-MX')} este mes
             </p>
           </div>
-          {vsLastYear !== null && lastYearBalance !== null && lastYearBalance !== 0 && (
+          {vsLastYear !== null && lastYearSummary!.balance !== 0 && (
             <div>
               <p className={uiStyles.cardLabel}>vs. mismo periodo</p>
               <p className={uiStyles.midStat}>
                 {vsLastYear >= 0 ? '+' : ''}
-                {Math.round((vsLastYear / Math.abs(lastYearBalance)) * 100)}%
+                {Math.round((vsLastYear / Math.abs(lastYearSummary!.balance)) * 100)}%
               </p>
               <p className={uiStyles.cardNote}>comparación {currentYear - 1}</p>
             </div>

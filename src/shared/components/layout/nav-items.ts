@@ -50,15 +50,37 @@ export function filterNavItemsByModules(
   });
 }
 
-// Los 4 destinos que se quedan con acceso directo en la barra inferior
-// mobile (el 5to slot es el botón central de acción rápida, no un destino
-// de navegación) -- todo lo demás en NAV_ITEMS se reubica en OverflowMenu.
-// Sidebar (desktop) sigue mostrando la lista completa sin este recorte.
+// Los 4 destinos que preferentemente tienen acceso directo en la barra
+// inferior mobile (el 5to slot es el botón central de acción rápida, no un
+// destino de navegación) -- todo lo demás en NAV_ITEMS se reubica en
+// OverflowMenu. Sidebar (desktop) sigue mostrando la lista completa sin
+// este recorte.
 const BOTTOM_TAB_HREFS = ['/dashboard', '/actividades', '/finanzas', '/salud'];
 
+// Si el usuario tiene un módulo desactivado (p.ej. sin Finanzas), ese slot
+// preferente queda vacío -- en vez de dejar la barra con 3 iconos (lo que
+// descentra el botón de acción rápida, ver BottomTabBar), se rellena en su
+// misma posición con el siguiente item disponible de OverflowMenu para que
+// siempre queden 2 iconos a cada lado del botón central.
 export function splitNavItemsForMobile(items: NavItem[]): { bottomItems: NavItem[]; overflowItems: NavItem[] } {
+  const byHref = new Map(items.map((item) => [item.href, item]));
+  const extras = items.filter((item) => !BOTTOM_TAB_HREFS.includes(item.href));
+  let nextExtraIndex = 0;
+
+  const bottomItems = BOTTOM_TAB_HREFS.reduce<NavItem[]>((acc, href) => {
+    const preferred = byHref.get(href);
+    if (preferred) {
+      acc.push(preferred);
+    } else if (nextExtraIndex < extras.length) {
+      acc.push(extras[nextExtraIndex]);
+      nextExtraIndex += 1;
+    }
+    return acc;
+  }, []);
+
+  const usedHrefs = new Set(bottomItems.map((item) => item.href));
   return {
-    bottomItems: items.filter((item) => BOTTOM_TAB_HREFS.includes(item.href)),
-    overflowItems: items.filter((item) => !BOTTOM_TAB_HREFS.includes(item.href)),
+    bottomItems,
+    overflowItems: items.filter((item) => !usedHrefs.has(item.href)),
   };
 }
