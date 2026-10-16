@@ -8,6 +8,7 @@ import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draf
 import { WEEKDAY_FULL_LABELS } from '../../../shared/lib/week';
 import { CatalogExercise, WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
 import { ExercisePicker } from './ExercisePicker';
+import { TRAINING_WEEKDAYS } from '../utils/training-schedule';
 import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
 import styles from './training.module.css';
 
@@ -191,7 +192,7 @@ export function NewWorkoutRoutineModal({ routine, catalog, onCatalogCreated, onC
           setDraftExercises(rows.length ? rows : [{ id: 0, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '', isBodyweight: false }]);
           nextIdRef.current = rows.length || 1;
         }}><option value="" disabled>Elegir distribución o personalizar</option>{ROUTINE_PRESETS.map((preset, index) => <option key={preset.name} value={index}>{preset.name}</option>)}</select></label>}
-        <fieldset className={styles.routineWeekdays}><legend>Días habituales</legend>{WEEKDAY_FULL_LABELS.map((label, day) => <label key={day}><input type="checkbox" checked={weekdays.includes(day)} onChange={() => setWeekdays(days => days.includes(day) ? days.filter(value => value !== day) : [...days, day].sort((a,b) => a-b))} />{label}</label>)}</fieldset>
+        <fieldset className={styles.routineWeekdays}><legend>Días habituales</legend>{TRAINING_WEEKDAYS.map(day => <label key={day}><input type="checkbox" checked={weekdays.includes(day)} onChange={() => setWeekdays(days => days.includes(day) ? days.filter(value => value !== day) : [...days, day].sort((a,b) => a-b))} />{WEEKDAY_FULL_LABELS[day]}</label>)}</fieldset>
 
         {draftExercises.map((ex) => (
           <div key={ex.id} className={styles.draftExerciseBlock}>

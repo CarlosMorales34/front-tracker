@@ -10,7 +10,6 @@ import { OfflineQueuedError } from '../../../shared/lib/api-client';
 import {
   addWeeks,
   formatWeekRangeLabel,
-  getCurrentWeekStartIso,
   getTodayIso,
   getWeekdayOfDateIso,
   WEEKDAY_FULL_LABELS,
@@ -23,6 +22,7 @@ import { NewWorkoutModal } from '../../training/components/NewWorkoutModal';
 import { workoutApi } from '../../training/services/workout.api';
 import { workoutRoutineApi } from '../../training/services/workout-routine.api';
 import { exerciseCatalogApi } from '../../training/services/exercise-catalog.api';
+import { getTrainingWeekStartIso } from '../../training/utils/training-schedule';
 import { CatalogExercise, CreateWorkoutInput, Workout, WorkoutRoutine } from '../../training/types/workout.types';
 import styles from './health-summary.module.css';
 
@@ -43,7 +43,7 @@ function formatAccumulatedDuration(totalSeconds: number): string {
 // Entrenamientos.
 export function HealthSummaryView() {
   const { accessToken } = useAuth();
-  const [weekStart, setWeekStart] = useState(getCurrentWeekStartIso());
+  const [weekStart, setWeekStart] = useState(getTrainingWeekStartIso);
   const [bodySummary, setBodySummary] = useState<BodyProgressSummary | null>(null);
   const [weekWorkouts, setWeekWorkouts] = useState<Workout[]>([]);
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);

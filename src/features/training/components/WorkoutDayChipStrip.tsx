@@ -16,6 +16,8 @@ export function WorkoutDayChipStrip({ days, selectedDateIso, onSelect }: Workout
           type="button"
           className={styles.dayChip}
           data-selected={day.dateIso === selectedDateIso}
+          aria-pressed={day.dateIso === selectedDateIso}
+          aria-label={`${day.weekdayLabel} ${day.dateIso}`}
           onClick={() => onSelect(day.dateIso)}
         >
           <span className={styles.dayChipWeekday}>{day.weekdayLabel}</span>

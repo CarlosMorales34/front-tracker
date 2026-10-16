@@ -6,7 +6,8 @@ import { CaretLeftIcon, ClockIcon, PencilIcon, PlusIcon, TrashIcon } from '../..
 import { useConfirm } from '../../../shared/components/ui/ConfirmProvider';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { OfflineQueuedError } from '../../../shared/lib/api-client';
-import { addWeeks, getCurrentWeekStartIso, formatWeekRangeLabel, getTodayIso, getWeekDayChips } from '../../../shared/lib/week';
+import { addWeeks, getTodayIso, getWeekdayOfDateIso } from '../../../shared/lib/week';
+import { formatTrainingWeekRange, getTrainingDayChips, getTrainingWeekStartIso } from '../utils/training-schedule';
 import { workoutApi } from '../services/workout.api';
 import { workoutRoutineApi } from '../services/workout-routine.api';
 import { exerciseCatalogApi } from '../services/exercise-catalog.api';
@@ -31,8 +32,8 @@ import { RoutinesSection } from './RoutinesSection';
 import { WorkoutDayChipStrip } from './WorkoutDayChipStrip';
 import { WorkoutPerformanceSection } from './WorkoutPerformanceSection';
 
-function pickDefaultDay(weekStartIso: string): string {
-  const chips = getWeekDayChips(weekStartIso);
+function pickDefaultDay(weekStartIso: string, includeWeekend: boolean): string {
+  const chips = getTrainingDayChips(weekStartIso, includeWeekend);
   const today = getTodayIso();
   return chips.find((day) => day.dateIso === today)?.dateIso ?? chips[0]!.dateIso;
 }
@@ -40,8 +41,9 @@ function pickDefaultDay(weekStartIso: string): string {
 export function TrainingView() {
   const { accessToken } = useAuth();
   const confirm = useConfirm();
-  const [weekStart, setWeekStart] = useState(getCurrentWeekStartIso());
-  const [selectedDayIso, setSelectedDayIso] = useState(() => pickDefaultDay(getCurrentWeekStartIso()));
+  const [weekStart, setWeekStart] = useState(getTrainingWeekStartIso);
+  const [includeWeekend, setIncludeWeekend] = useState(() => [0, 6].includes(getWeekdayOfDateIso(getTodayIso())));
+  const [selectedDayIso, setSelectedDayIso] = useState(getTodayIso);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [performance, setPerformance] = useState<WorkoutPerformance | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -55,19 +57,18 @@ export function TrainingView() {
   const [catalog, setCatalog] = useState<CatalogExercise[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [routinesReady, setRoutinesReady] = useState(false);
   const catalogCreated = (exercise: CatalogExercise) => setCatalog(previous => [...previous.filter(row => row.id !== exercise.id), exercise].sort((a,b) => a.name.localeCompare(b.name)));
 
-  const dayChips = useMemo(() => getWeekDayChips(weekStart), [weekStart]);
+  const dayChips = useMemo(() => getTrainingDayChips(weekStart, includeWeekend), [weekStart, includeWeekend]);
   const dayWorkouts = useMemo(
     () => workouts.filter((workout) => workout.workoutDate === selectedDayIso),
     [workouts, selectedDayIso],
   );
 
-  // Navegar de semana resetea el día seleccionado -- si hoy cae dentro de la
-  // semana nueva se selecciona hoy, si no el primer día (sábado) de esa semana.
   useEffect(() => {
-    setSelectedDayIso(pickDefaultDay(weekStart));
-  }, [weekStart]);
+    setSelectedDayIso(previous => dayChips.some(day => day.dateIso === previous) ? previous : pickDefaultDay(weekStart, includeWeekend));
+  }, [weekStart, includeWeekend, dayChips]);
 
   const load = useCallback(async () => {
     const [weekWorkouts, workoutPerformance, workoutRoutines, trainingStreak, settings, exercises] = await Promise.all([
@@ -84,6 +85,7 @@ export function TrainingView() {
     setStreak(trainingStreak);
     setTrainingSettings(settings);
     setCatalog(exercises);
+    setRoutinesReady(true);
     setLoadError(null);
   }, [weekStart, accessToken]);
 
@@ -210,7 +212,7 @@ export function TrainingView() {
             <CaretLeftIcon />
           </button>
           <div>
-            <p className={styles.workoutsHeaderTitle}>{formatWeekRangeLabel(weekStart)}</p>
+            <p className={styles.workoutsHeaderTitle}>{formatTrainingWeekRange(weekStart, includeWeekend)}</p>
             <p className={styles.workoutsHeaderSubtitle}>{workouts.length} entrenamientos registrados</p>
           </div>
           <button
@@ -251,6 +253,7 @@ export function TrainingView() {
         </div>
       )}
 
+      <label className={styles.scheduleToggle}><input type="checkbox" checked={includeWeekend} onChange={event => setIncludeWeekend(event.target.checked)} />Fin de semana</label>
       <WorkoutDayChipStrip days={dayChips} selectedDateIso={selectedDayIso} onSelect={setSelectedDayIso} />
 
       <RoutinesSection
@@ -306,6 +309,7 @@ export function TrainingView() {
       {isModalOpen && (
         <NewWorkoutModal
           catalog={catalog}
+          routinesReady={routinesReady}
           onCatalogCreated={catalogCreated}
           routines={routines}
           defaultDate={selectedDayIso}

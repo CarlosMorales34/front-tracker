@@ -1,4 +1,5 @@
 import styles from './training.module.css';
+import { TRAINING_WEEKDAYS } from '../utils/training-schedule';
 
 interface RestDaysSettingsProps {
   restWeekdays: number[];
@@ -18,7 +19,7 @@ export function RestDaysSettings({ restWeekdays, onToggle, isSaving }: RestDaysS
       <p className={styles.restDaysLabel}>Días de descanso</p>
       <p className={styles.restDaysNote}>No rompen tu racha aunque no entrenes ese día.</p>
       <div className={styles.dayChipStrip}>
-        {WEEKDAY_SHORT.map((label, weekday) => (
+        {TRAINING_WEEKDAYS.map(weekday => (
           <button
             key={weekday}
             type="button"
@@ -28,7 +29,7 @@ export function RestDaysSettings({ restWeekdays, onToggle, isSaving }: RestDaysS
             onClick={() => onToggle(weekday)}
             aria-pressed={restWeekdays.includes(weekday)}
           >
-            <span className={styles.dayChipWeekday}>{label}</span>
+            <span className={styles.dayChipWeekday}>{WEEKDAY_SHORT[weekday]}</span>
           </button>
         ))}
       </div>

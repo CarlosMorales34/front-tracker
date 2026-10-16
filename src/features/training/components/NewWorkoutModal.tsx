@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from '../../../shared/components/ui/Modal';
 import { PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
@@ -8,6 +8,7 @@ import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draf
 import { WEEKDAY_FULL_LABELS, getWeekdayOfDateIso } from '../../../shared/lib/week';
 import { CatalogExercise, CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutRoutine } from '../types/workout.types';
 import { ExercisePicker } from './ExercisePicker';
+import { catalogForRoutines, routinesForDate } from '../utils/training-schedule';
 import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
 import { formatMMSS, formatDurationLabel } from '../utils/workout-format';
 import styles from './training.module.css';
@@ -29,6 +30,7 @@ interface DraftExercise {
 const DRAFT_KEY = 'new-workout';
 
 interface WorkoutDraft {
+  workoutDate?: string;
   timeMode: 'timer' | 'range';
   elapsedSeconds: number;
   rangeStart: string;
@@ -43,6 +45,7 @@ interface NewWorkoutModalProps {
   onCatalogCreated: (exercise: CatalogExercise) => void;
   workout?: Workout;
   routines?: WorkoutRoutine[];
+  routinesReady?: boolean;
   // Día seleccionado en WorkoutDayChipStrip -- solo aplica al crear (editar
   // conserva la fecha original del workout, ver handleSave).
   defaultDate?: string;
@@ -83,8 +86,13 @@ function draftExercisesFromWorkout(workout: Workout): DraftExercise[] {
   }));
 }
 
-export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, onCatalogCreated, onClose, onSave, onUpdate }: NewWorkoutModalProps) {
+export function NewWorkoutModal({ workout, routines = [], routinesReady = true, defaultDate, catalog, onCatalogCreated, onClose, onSave, onUpdate }: NewWorkoutModalProps) {
   const isEditing = workout !== undefined;
+  const dayRoutines = useMemo(() => defaultDate ? routinesForDate(routines, defaultDate) : [], [routines, defaultDate]);
+  const defaultRoutine = !isEditing && dayRoutines.length === 1 ? dayRoutines[0] : undefined;
+  const initialized = useRef(isEditing || routinesReady);
+  const interacted = useRef(false);
+  const [showAllExercises, setShowAllExercises] = useState(isEditing);
   // Editar no tiene cronómetro corriendo -- el tiempo ya quedó fijo al
   // guardar la sesión, así que se precarga como duración "congelada" en vez
   // de reanudar un timer que nunca existió en ese modo.
@@ -98,19 +106,22 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
   const [rangeStart, setRangeStart] = useState('18:00');
   const [rangeEnd, setRangeEnd] = useState('19:00');
 
-  const nextIdRef = useRef(workout?.exercises.length ?? 1);
+  const nextIdRef = useRef(workout?.exercises.length ?? (routinesReady ? defaultRoutine?.exercises.length : undefined) ?? 1);
   const [draftExercises, setDraftExercises] = useState<DraftExercise[]>(() =>
     workout
       ? draftExercisesFromWorkout(workout)
-      : [{ id: 0, name: '', weight: '', isBodyweight: false, sets: '1', reps: [''] }],
+      : routinesReady && defaultRoutine ? draftExercisesFromRoutine(defaultRoutine)
+        : [{ id: 0, name: '', weight: '', isBodyweight: false, sets: '1', reps: [''] }],
   );
   const [comments, setComments] = useState(workout?.comments ?? '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [suggestionDismissed, setSuggestionDismissed] = useState(false);
   // Qué rutina se usó como plantilla (si alguna) -- se guarda con el
   // entrenamiento como su origen, para poder filtrar el historial después.
-  const [appliedRoutineId, setAppliedRoutineId] = useState<string | null>(workout?.sourceRoutineId ?? null);
+  const [appliedRoutineId, setAppliedRoutineId] = useState<string | null>(workout?.sourceRoutineId ?? (routinesReady ? defaultRoutine?.id ?? null : null));
+  const appliedRoutine = routines.find(routine => routine.id === appliedRoutineId);
+  const visibleRoutines = showAllExercises ? routines : [...dayRoutines, ...(appliedRoutine && !dayRoutines.includes(appliedRoutine) ? [appliedRoutine] : [])];
+  const exerciseCatalog = showAllExercises ? catalog : catalogForRoutines(catalog, appliedRoutine ? [appliedRoutine] : dayRoutines);
 
   // Borrador local sin recuperar todavía -- se ofrece antes de aplicarlo
   // solo, para no pisar lo que el usuario ya haya empezado a escribir en
@@ -126,8 +137,19 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (initialized.current || !routinesReady || !draftChecked || pendingDraft) return;
+    initialized.current = true;
+    if (interacted.current || !defaultRoutine) return;
+    nextIdRef.current = defaultRoutine.exercises.length;
+    setDraftExercises(draftExercisesFromRoutine(defaultRoutine));
+    setAppliedRoutineId(defaultRoutine.id);
+  }, [routinesReady, draftChecked, pendingDraft, defaultRoutine]);
+
   const recoverDraft = () => {
     if (!pendingDraft) return;
+    initialized.current = true;
+    interacted.current = true;
     setTimeMode(pendingDraft.timeMode);
     setElapsedSeconds(pendingDraft.elapsedSeconds);
     setRangeStart(pendingDraft.rangeStart);
@@ -135,6 +157,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
     setDraftExercises(pendingDraft.draftExercises);
     setComments(pendingDraft.comments);
     setAppliedRoutineId(pendingDraft.appliedRoutineId);
+    if (pendingDraft.appliedRoutineId && !dayRoutines.some(routine => routine.id === pendingDraft.appliedRoutineId)) setShowAllExercises(true);
     nextIdRef.current = pendingDraft.draftExercises.length;
     setPendingDraft(null);
   };
@@ -149,9 +172,17 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
   // borrador pendiente de recuperar/descartar (evitaría pisarlo con el
   // estado en blanco inicial) ni en modo edición.
   useEffect(() => {
-    if (isEditing || !draftChecked || pendingDraft) return;
+    if (isEditing || !routinesReady || !initialized.current || !draftChecked || pendingDraft) return;
+    const baseline = defaultRoutine ? draftExercisesFromRoutine(defaultRoutine) : [{ id: 0, name: '', weight: '', isBodyweight: false, sets: '1', reps: [''] }];
+    // Opening a prefilled form alone should not create a recoverable draft.
+    if (timeMode === 'timer' && elapsedSeconds === 0 && !timerRunning && rangeStart === '18:00' && rangeEnd === '19:00' && !comments &&
+      appliedRoutineId === (defaultRoutine?.id ?? null) && JSON.stringify(draftExercises) === JSON.stringify(baseline)) {
+      clearDraft(DRAFT_KEY);
+      return;
+    }
     const timeout = setTimeout(() => {
       saveDraft<WorkoutDraft>(DRAFT_KEY, {
+        workoutDate: defaultDate,
         timeMode,
         elapsedSeconds: currentElapsed(),
         rangeStart,
@@ -163,15 +194,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
     }, 500);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, draftChecked, pendingDraft, timeMode, rangeStart, rangeEnd, draftExercises, comments, appliedRoutineId]);
-
-  // Solo al crear (no editar) y solo si hay una rutina asociada al día
-  // seleccionado -- se sugiere, no se aplica sola, para no pisar lo que el
-  // usuario ya haya empezado a escribir.
-  const suggestedRoutine =
-    !isEditing && defaultDate
-      ? routines.find((r) => (r.weekdays ?? (r.weekday === null ? [] : [r.weekday])).includes(getWeekdayOfDateIso(defaultDate)))
-      : undefined;
+  }, [isEditing, routinesReady, draftChecked, pendingDraft, timeMode, elapsedSeconds, timerRunning, rangeStart, rangeEnd, draftExercises, comments, appliedRoutineId, defaultDate, defaultRoutine]);
 
   useEffect(() => {
     return () => {
@@ -202,34 +225,29 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
   };
 
   const addDraftExercise = () => {
+    interacted.current = true;
     setDraftExercises((prev) => [
       ...prev,
       { id: nextIdRef.current++, name: '', weight: '', isBodyweight: false, sets: '3', reps: ['', '', ''] },
     ]);
   };
 
-  // Usar una rutina reemplaza los ejercicios del borrador con su plantilla
-  // (series/reps/peso sugerido) -- es solo un punto de partida, todo queda
-  // editable y el entrenamiento guardado no conserva referencia a la rutina.
   const applyRoutine = (routineId: string) => {
     const routine = routines.find((r) => r.id === routineId);
     if (!routine) return;
+    interacted.current = true;
     nextIdRef.current = routine.exercises.length;
     setDraftExercises(draftExercisesFromRoutine(routine));
     setAppliedRoutineId(routineId);
   };
 
-  const acceptSuggestedRoutine = () => {
-    if (!suggestedRoutine) return;
-    applyRoutine(suggestedRoutine.id);
-    setSuggestionDismissed(true);
-  };
-
   const removeDraftExercise = (id: number) => {
+    interacted.current = true;
     setDraftExercises((prev) => prev.filter((ex) => ex.id !== id));
   };
 
   const updateExercise = (id: number, changes: Partial<DraftExercise>) => {
+    interacted.current = true;
     setDraftExercises((prev) => prev.map((ex) => (ex.id === id ? { ...ex, ...changes } : ex)));
   };
 
@@ -237,6 +255,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
   // solo regenera las filas de reps cuando el valor ya es un entero válido,
   // para no colapsar la lista de reps a la primera tecla.
   const updateSets = (id: number, rawValue: string) => {
+    interacted.current = true;
     const digits = sanitizeInt(rawValue);
     const parsed = Number(digits);
     setDraftExercises((prev) =>
@@ -250,6 +269,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
   };
 
   const updateRep = (id: number, index: number, rawValue: string) => {
+    interacted.current = true;
     const digits = sanitizeInt(rawValue);
     setDraftExercises((prev) =>
       prev.map((ex) => (ex.id !== id ? ex : { ...ex, reps: ex.reps.map((r, i) => (i === index ? digits : r)) })),
@@ -257,9 +277,10 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
   };
 
   const handleSave = async () => {
+    if (!isEditing && !routinesReady) return;
     const validExercises = draftExercises.filter((ex) => ex.name.trim().length > 0);
     if (validExercises.length === 0) {
-      onClose();
+      setSaveError('Selecciona al menos un ejercicio.');
       return;
     }
 
@@ -295,18 +316,19 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
   return (
     <Modal title={isEditing ? 'Editar entrenamiento' : 'Nuevo entrenamiento'} onClose={onClose}>
       <div className={uiStyles.modalForm}>
+        {!isEditing && defaultDate && <p className={uiStyles.cardNote}>{WEEKDAY_FULL_LABELS[getWeekdayOfDateIso(defaultDate)]} · {defaultDate}{appliedRoutine ? ` · ${appliedRoutine.name}` : ''}</p>}
         {saveError && <p role="alert">{saveError}</p>}
         {pendingDraft && (
           <div className={uiStyles.card} style={{ padding: '0.85rem 1rem' }}>
             <p className={uiStyles.cardNote} style={{ marginBottom: '0.65rem' }}>
-              Tienes un borrador sin guardar de un entrenamiento anterior. ¿Quieres recuperarlo?
+              Borrador pendiente{pendingDraft.workoutDate ? ` del ${pendingDraft.workoutDate}` : ' de un entrenamiento anterior'}.
             </p>
             <div className={uiStyles.modalActions} style={{ marginTop: 0 }}>
               <button type="button" className={uiStyles.modalCancelButton} onClick={discardDraft}>
                 Descartar
               </button>
               <button type="button" className={uiStyles.modalPrimaryButton} onClick={recoverDraft}>
-                Recuperar borrador
+                {pendingDraft.workoutDate && pendingDraft.workoutDate !== defaultDate ? `Recuperar para ${defaultDate}` : 'Recuperar borrador'}
               </button>
             </div>
           </div>
@@ -352,26 +374,12 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
           </div>
         )}
 
-        {suggestedRoutine && !suggestionDismissed && (
-          <div className={uiStyles.card} style={{ padding: '0.85rem 1rem' }}>
-            <p className={uiStyles.cardNote} style={{ marginBottom: '0.65rem' }}>
-              Rutina para el día seleccionado ({defaultDate ? WEEKDAY_FULL_LABELS[getWeekdayOfDateIso(defaultDate)] : ''}):{' '}
-              <strong>{suggestedRoutine.name}</strong>. ¿Quieres usarla?
-            </p>
-            <div className={uiStyles.modalActions} style={{ marginTop: 0 }}>
-              <button type="button" className={uiStyles.modalCancelButton} onClick={() => setSuggestionDismissed(true)}>
-                Ahora no
-              </button>
-              <button type="button" className={uiStyles.modalPrimaryButton} onClick={acceptSuggestedRoutine}>
-                Usar rutina
-              </button>
-            </div>
-          </div>
-        )}
-
-        {routines.length > 0 && (
+        {!isEditing && !routinesReady && <p role="status">Cargando rutina del día…</p>}
+        {!isEditing && routinesReady && dayRoutines.length === 0 && !appliedRoutine && <p className={uiStyles.cardNote}>Sin rutina asignada a esta fecha.</p>}
+        {!isEditing && <label className={styles.scheduleToggle}><input type="checkbox" checked={showAllExercises} onChange={event => setShowAllExercises(event.target.checked)} />Otras rutinas y ejercicios</label>}
+        {visibleRoutines.length > 0 && (
           <label className={uiStyles.modalLabel}>
-            Usar rutina (opcional)
+            Rutina
             <select
               className={uiStyles.modalInput}
               value={appliedRoutineId ?? ''}
@@ -380,10 +388,10 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
               <option value="" disabled>
                 Elegir rutina para precargar ejercicios…
               </option>
-              {routines.map((routine) => (
+              {visibleRoutines.map((routine) => (
                 <option key={routine.id} value={routine.id}>
                   {routine.name}
-                  {(routine.weekdays ?? (routine.weekday === null ? [] : [routine.weekday])).map(day => WEEKDAY_FULL_LABELS[day]).join(', ')}
+                  {(routine.weekdays ?? (routine.weekday === null ? [] : [routine.weekday])).length > 0 && ` · ${(routine.weekdays ?? (routine.weekday === null ? [] : [routine.weekday])).map(day => WEEKDAY_FULL_LABELS[day]).join(', ')}`}
                 </option>
               ))}
             </select>
@@ -393,7 +401,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
         {draftExercises.map((ex) => (
           <div key={ex.id} className={styles.draftExerciseBlock}>
             <div className={styles.draftExerciseTop}>
-              <ExercisePicker catalog={catalog} exerciseId={ex.exerciseId} name={ex.name} onCreated={onCatalogCreated}
+              <ExercisePicker catalog={exerciseCatalog} exerciseId={ex.exerciseId} name={ex.name} onCreated={onCatalogCreated} allowCreate={showAllExercises}
                 onSelect={exercise => updateExercise(ex.id, { name: exercise.name, exerciseId: exercise.id })} />
               <button
                 type="button"
@@ -463,7 +471,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
             rows={3}
             placeholder="¿Cómo te sentiste? ¿Algo a ajustar?"
             value={comments}
-            onChange={(event) => setComments(event.target.value)}
+            onChange={(event) => { interacted.current = true; setComments(event.target.value); }}
           />
         </label>
 
@@ -471,7 +479,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, 
           <button type="button" className={uiStyles.modalCancelButton} onClick={onClose}>
             Cancelar
           </button>
-          <button type="button" className={uiStyles.modalPrimaryButton} onClick={handleSave} disabled={isSaving}>
+          <button type="button" className={uiStyles.modalPrimaryButton} onClick={handleSave} disabled={isSaving || (!isEditing && !routinesReady)}>
             {isEditing ? 'Guardar cambios' : 'Guardar entrenamiento'}
           </button>
         </div>

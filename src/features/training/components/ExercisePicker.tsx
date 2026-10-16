@@ -13,9 +13,10 @@ interface Props {
   name: string;
   onSelect: (exercise: CatalogExercise) => void;
   onCreated: (exercise: CatalogExercise) => void;
+  allowCreate?: boolean;
 }
 
-export function ExercisePicker({ catalog, exerciseId, name, onSelect, onCreated }: Props) {
+export function ExercisePicker({ catalog, exerciseId, name, onSelect, onCreated, allowCreate = true }: Props) {
   const { accessToken } = useAuth();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
@@ -40,7 +41,7 @@ export function ExercisePicker({ catalog, exerciseId, name, onSelect, onCreated 
       <option value="" disabled>Seleccionar ejercicio</option>
       {!selected && name && <option value="legacy">{name}</option>}
       {catalog.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-      <option value="new">+ Nuevo ejercicio</option>
+      {allowCreate && <option value="new">+ Nuevo ejercicio</option>}
     </select>
     {creating && <div className={styles.exerciseCreateRow}><input className={uiStyles.modalInput} aria-label="Nombre del nuevo ejercicio" value={newName} maxLength={255} onChange={e => setNewName(e.target.value)} /><button type="button" className={uiStyles.modalPrimaryButton} disabled={saving || !newName.trim()} onClick={create}>Agregar</button><button type="button" className={uiStyles.modalCancelButton} onClick={() => setCreating(false)}>Cancelar</button></div>}
     {error && <p role="alert">{error}</p>}
