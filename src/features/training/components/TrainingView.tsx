@@ -9,8 +9,11 @@ import { OfflineQueuedError } from '../../../shared/lib/api-client';
 import { addWeeks, getCurrentWeekStartIso, formatWeekRangeLabel, getTodayIso, getWeekDayChips } from '../../../shared/lib/week';
 import { workoutApi } from '../services/workout.api';
 import { workoutRoutineApi } from '../services/workout-routine.api';
+import { exerciseCatalogApi } from '../services/exercise-catalog.api';
+import { ExerciseCatalogModal } from './ExerciseCatalogModal';
 import {
   CreateWorkoutInput,
+  CatalogExercise,
   TrainingSettings,
   TrainingStreak,
   UpdateWorkoutInput,
@@ -49,6 +52,10 @@ export function TrainingView() {
   const [streak, setStreak] = useState<TrainingStreak | null>(null);
   const [trainingSettings, setTrainingSettings] = useState<TrainingSettings | null>(null);
   const [isSavingRestDays, setIsSavingRestDays] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogExercise[]>([]);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const catalogCreated = (exercise: CatalogExercise) => setCatalog(previous => [...previous.filter(row => row.id !== exercise.id), exercise].sort((a,b) => a.name.localeCompare(b.name)));
 
   const dayChips = useMemo(() => getWeekDayChips(weekStart), [weekStart]);
   const dayWorkouts = useMemo(
@@ -63,22 +70,25 @@ export function TrainingView() {
   }, [weekStart]);
 
   const load = useCallback(async () => {
-    const [weekWorkouts, workoutPerformance, workoutRoutines, trainingStreak, settings] = await Promise.all([
+    const [weekWorkouts, workoutPerformance, workoutRoutines, trainingStreak, settings, exercises] = await Promise.all([
       workoutApi.listForWeek(weekStart, accessToken),
       workoutApi.getPerformance(accessToken),
       workoutRoutineApi.list(accessToken),
       workoutApi.getStreak(accessToken),
       workoutApi.getSettings(accessToken),
+      exerciseCatalogApi.list(accessToken),
     ]);
     setWorkouts(weekWorkouts);
     setPerformance(workoutPerformance);
     setRoutines(workoutRoutines);
     setStreak(trainingStreak);
     setTrainingSettings(settings);
+    setCatalog(exercises);
+    setLoadError(null);
   }, [weekStart, accessToken]);
 
   useEffect(() => {
-    if (accessToken) load();
+    if (accessToken) load().catch(() => setLoadError('No se pudieron cargar tus entrenamientos.'));
   }, [accessToken, load]);
 
   // Abre el modal de "nuevo entrenamiento" cuando se llega acá desde el
@@ -188,6 +198,7 @@ export function TrainingView() {
 
   return (
     <div>
+      {loadError && <p role="alert">{loadError}<button type="button" onClick={() => load().catch(() => setLoadError('No se pudieron cargar tus entrenamientos.'))}>Reintentar</button></p>}
       <div className={styles.workoutsHeader}>
         <div className={styles.workoutsWeekNav}>
           <button
@@ -248,6 +259,7 @@ export function TrainingView() {
         onEdit={setEditingRoutine}
         onDelete={handleDeleteRoutine}
       />
+      <button type="button" className={styles.addWorkoutButton} onClick={() => setCatalogOpen(true)}><PencilIcon /> Catálogo de ejercicios</button>
 
       {performance && <WorkoutPerformanceSection performance={performance} />}
 
@@ -293,6 +305,8 @@ export function TrainingView() {
 
       {isModalOpen && (
         <NewWorkoutModal
+          catalog={catalog}
+          onCatalogCreated={catalogCreated}
           routines={routines}
           defaultDate={selectedDayIso}
           onClose={() => setModalOpen(false)}
@@ -301,6 +315,8 @@ export function TrainingView() {
       )}
       {editingWorkout && (
         <NewWorkoutModal
+          catalog={catalog}
+          onCatalogCreated={catalogCreated}
           workout={editingWorkout}
           routines={routines}
           onClose={() => setEditingWorkout(null)}
@@ -309,15 +325,18 @@ export function TrainingView() {
         />
       )}
       {isRoutineModalOpen && (
-        <NewWorkoutRoutineModal onClose={() => setRoutineModalOpen(false)} onSave={handleSaveRoutine} />
+        <NewWorkoutRoutineModal catalog={catalog} onCatalogCreated={catalogCreated} onClose={() => setRoutineModalOpen(false)} onSave={handleSaveRoutine} />
       )}
       {editingRoutine && (
         <NewWorkoutRoutineModal
+          catalog={catalog}
+          onCatalogCreated={catalogCreated}
           routine={editingRoutine}
           onClose={() => setEditingRoutine(null)}
           onSave={handleUpdateRoutine}
         />
       )}
+      {catalogOpen && <ExerciseCatalogModal catalog={catalog} onClose={() => setCatalogOpen(false)} onChanged={load} />}
     </div>
   );
 }

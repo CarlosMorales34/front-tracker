@@ -22,7 +22,8 @@ import { formatSignedKg, formatWeightKg } from '../../body-progress/utils/units'
 import { NewWorkoutModal } from '../../training/components/NewWorkoutModal';
 import { workoutApi } from '../../training/services/workout.api';
 import { workoutRoutineApi } from '../../training/services/workout-routine.api';
-import { CreateWorkoutInput, Workout, WorkoutRoutine } from '../../training/types/workout.types';
+import { exerciseCatalogApi } from '../../training/services/exercise-catalog.api';
+import { CatalogExercise, CreateWorkoutInput, Workout, WorkoutRoutine } from '../../training/types/workout.types';
 import styles from './health-summary.module.css';
 
 function formatAccumulatedDuration(totalSeconds: number): string {
@@ -46,20 +47,23 @@ export function HealthSummaryView() {
   const [bodySummary, setBodySummary] = useState<BodyProgressSummary | null>(null);
   const [weekWorkouts, setWeekWorkouts] = useState<Workout[]>([]);
   const [routines, setRoutines] = useState<WorkoutRoutine[]>([]);
+  const [catalog, setCatalog] = useState<CatalogExercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [isMeasurementModalOpen, setMeasurementModalOpen] = useState(false);
   const [isWorkoutModalOpen, setWorkoutModalOpen] = useState(false);
 
   const load = useCallback(async () => {
-    const [summary, workouts, workoutRoutines] = await Promise.all([
+    const [summary, workouts, workoutRoutines, exercises] = await Promise.all([
       bodyProgressApi.getSummary(accessToken),
       workoutApi.listForWeek(weekStart, accessToken),
       workoutRoutineApi.list(accessToken),
+      exerciseCatalogApi.list(accessToken),
     ]);
     setBodySummary(summary);
     setWeekWorkouts(workouts);
     setRoutines(workoutRoutines);
+    setCatalog(exercises);
   }, [weekStart, accessToken]);
 
   useEffect(() => {
@@ -74,14 +78,14 @@ export function HealthSummaryView() {
   const today = getTodayIso();
   const todayWeekday = getWeekdayOfDateIso(today);
   const todayRoutine = useMemo(
-    () => routines.find((routine) => routine.weekday === todayWeekday) ?? null,
+    () => routines.find((routine) => (routine.weekdays ?? (routine.weekday === null ? [] : [routine.weekday])).includes(todayWeekday)) ?? null,
     [routines, todayWeekday],
   );
   const hasLoggedToday = weekWorkouts.some((workout) => workout.workoutDate === today);
   // Cada rutina con día fijo recurre una vez por semana -- por eso el total
   // programado de la semana es simplemente cuántas rutinas tienen weekday
   // asignado, sin importar qué semana se esté viendo.
-  const scheduledCount = useMemo(() => routines.filter((routine) => routine.weekday !== null).length, [routines]);
+  const scheduledCount = useMemo(() => routines.reduce((sum, routine) => sum + (routine.weekdays ?? (routine.weekday === null ? [] : [routine.weekday])).length, 0), [routines]);
   const totalDurationSeconds = useMemo(
     () => weekWorkouts.reduce((sum, workout) => sum + workout.durationSeconds, 0),
     [weekWorkouts],
@@ -258,6 +262,8 @@ export function HealthSummaryView() {
       )}
       {isWorkoutModalOpen && (
         <NewWorkoutModal
+          catalog={catalog}
+          onCatalogCreated={exercise => setCatalog(previous => [...previous.filter(row => row.id !== exercise.id), exercise])}
           routines={routines}
           defaultDate={today}
           onClose={() => setWorkoutModalOpen(false)}

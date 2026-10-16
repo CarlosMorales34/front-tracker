@@ -44,8 +44,8 @@ export function RoutinesSection({ routines, onAddClick, onEdit, onDelete }: Rout
                 ))}
               </div>
               <div className={styles.workoutMeta}>
-                {routine.weekday !== null && (
-                  <span className={styles.durationTag}>{WEEKDAY_FULL_LABELS[routine.weekday]}</span>
+                {(routine.weekdays ?? (routine.weekday === null ? [] : [routine.weekday])).length > 0 && (
+                  <span className={styles.durationTag}>{(routine.weekdays ?? [routine.weekday!]).map(day => WEEKDAY_FULL_LABELS[day]).join(' · ')}</span>
                 )}
                 <button
                   type="button"

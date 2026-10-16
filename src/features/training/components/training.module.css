@@ -455,3 +455,13 @@
   font-family: inherit;
   margin-bottom: 0.7rem;
 }
+.exercisePicker { flex: 1; min-width: 0; }
+.exerciseCreateRow { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.routineWeekdays { display: flex; flex-wrap: wrap; gap: 0.65rem; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 8px; }
+.routineWeekdays label { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; }
+.catalogRows { display: grid; gap: 0.75rem; }
+.catalogRow { padding: 0.75rem 0; border-bottom: 1px solid var(--color-border); }
+.catalogRow small { display: block; color: var(--color-text-secondary); margin: 0.3rem 0; }
+.catalogActions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.catalogActions input, .catalogActions select { flex: 1 1 180px; min-width: 0; }
+.trainingModalActions { bottom: 0; margin-bottom: 0; z-index: 1; }

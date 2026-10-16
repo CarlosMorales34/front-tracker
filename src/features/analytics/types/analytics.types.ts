@@ -22,6 +22,8 @@ export interface PersonalAnalyticsSummary {
     medianHours: number | null;
     bedtimeDispersionMinutes: number | null;
     shortSleepDays: number;
+    secondaryHours: number;
+    secondarySamples: number;
     weekdayAverages: { weekday: number; averageHours: number; samples: number }[];
   };
   work: {
@@ -33,6 +35,10 @@ export interface PersonalAnalyticsSummary {
     medianEndTime: string | null;
     averageBlockHours: number | null;
     mostFrequentStartBucket: string | null;
+    averageDayHours: number | null;
+    multiBlockDays: number;
+    weekendDays: number;
+    blocks: { period: 'morning' | 'afternoon' | 'night'; samples: number; startTime: string; endTime: string }[];
     weekdayAverages: { weekday: number; averageHours: number; samples: number }[];
   };
   activities: {
@@ -74,6 +80,8 @@ export interface PersonalAnalyticsSummary {
     totalHours: number;
     averageMinutes: number | null;
     sessionsPerWeek: number;
+    activeDays: number;
+    weeklyDays: { week: string; days: number; complete: boolean }[];
     lastWorkoutDate: string | null;
     weekdayCounts: { weekday: number; sessions: number; averageMinutes: number }[];
     topExercises: {
@@ -96,15 +104,25 @@ export interface PersonalAnalyticsSummary {
     distanceToTargetKg: number | null;
     trendVsGoal: 'favorable' | 'unfavorable' | 'neutral' | null;
     latestMeasurementAt: string | null;
+    measurementCount: number;
+    measurementAgeDays: number | null;
   };
   timeline: {
     date: string;
-    sleepHours: number;
-    workHours: number;
-    activityHours: number;
-    workoutMinutes: number;
+    sleepHours: number | null;
+    workHours: number | null;
+    activityHours: number | null;
+    workoutMinutes: number | null;
     weightKg: number | null;
   }[];
   dataQuality: { warnings: AnalyticsInsight[] };
+  comparison: {
+    from: string;
+    to: string;
+    sleepDays: number;
+    sleepAverageHours: number | null;
+    sleepChangeHours: number | null;
+    bedtimeDispersionChangeMinutes: number | null;
+  };
   insights: AnalyticsInsight[];
 }

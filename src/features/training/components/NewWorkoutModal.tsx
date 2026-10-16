@@ -6,12 +6,14 @@ import { PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draft';
 import { WEEKDAY_FULL_LABELS, getWeekdayOfDateIso } from '../../../shared/lib/week';
-import { CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutRoutine } from '../types/workout.types';
+import { CatalogExercise, CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutRoutine } from '../types/workout.types';
+import { ExercisePicker } from './ExercisePicker';
 import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
 import { formatMMSS, formatDurationLabel } from '../utils/workout-format';
 import styles from './training.module.css';
 
 interface DraftExercise {
+  exerciseId?: string | null;
   id: number;
   name: string;
   weight: string;
@@ -37,6 +39,8 @@ interface WorkoutDraft {
 }
 
 interface NewWorkoutModalProps {
+  catalog: CatalogExercise[];
+  onCatalogCreated: (exercise: CatalogExercise) => void;
   workout?: Workout;
   routines?: WorkoutRoutine[];
   // Día seleccionado en WorkoutDayChipStrip -- solo aplica al crear (editar
@@ -51,6 +55,7 @@ function draftExercisesFromRoutine(routine: WorkoutRoutine): DraftExercise[] {
   return routine.exercises.map((ex, index) => ({
     id: index,
     name: ex.name,
+    exerciseId: ex.exerciseId,
     weight: ex.suggestedWeight === null ? '' : String(ex.suggestedWeight),
     isBodyweight: ex.isBodyweight,
     sets: String(ex.targetSets),
@@ -70,6 +75,7 @@ function draftExercisesFromWorkout(workout: Workout): DraftExercise[] {
   return workout.exercises.map((ex, index) => ({
     id: index,
     name: ex.name,
+    exerciseId: ex.exerciseId,
     weight: ex.weight === null ? '' : String(ex.weight),
     isBodyweight: ex.isBodyweight,
     sets: String(ex.sets),
@@ -77,7 +83,7 @@ function draftExercisesFromWorkout(workout: Workout): DraftExercise[] {
   }));
 }
 
-export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, onSave, onUpdate }: NewWorkoutModalProps) {
+export function NewWorkoutModal({ workout, routines = [], defaultDate, catalog, onCatalogCreated, onClose, onSave, onUpdate }: NewWorkoutModalProps) {
   const isEditing = workout !== undefined;
   // Editar no tiene cronómetro corriendo -- el tiempo ya quedó fijo al
   // guardar la sesión, así que se precarga como duración "congelada" en vez
@@ -100,10 +106,11 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
   );
   const [comments, setComments] = useState(workout?.comments ?? '');
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [suggestionDismissed, setSuggestionDismissed] = useState(false);
   // Qué rutina se usó como plantilla (si alguna) -- se guarda con el
   // entrenamiento como su origen, para poder filtrar el historial después.
-  const [appliedRoutineId, setAppliedRoutineId] = useState<string | null>(null);
+  const [appliedRoutineId, setAppliedRoutineId] = useState<string | null>(workout?.sourceRoutineId ?? null);
 
   // Borrador local sin recuperar todavía -- se ofrece antes de aplicarlo
   // solo, para no pisar lo que el usuario ya haya empezado a escribir en
@@ -163,7 +170,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
   // usuario ya haya empezado a escribir.
   const suggestedRoutine =
     !isEditing && defaultDate
-      ? routines.find((r) => r.weekday === getWeekdayOfDateIso(defaultDate))
+      ? routines.find((r) => (r.weekdays ?? (r.weekday === null ? [] : [r.weekday])).includes(getWeekdayOfDateIso(defaultDate)))
       : undefined;
 
   useEffect(() => {
@@ -260,6 +267,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
     const durationSeconds = timeMode === 'range' ? rangeDurationSeconds(rangeStart, rangeEnd) : currentElapsed();
 
     const exercises = validExercises.map((ex) => ({
+      exerciseId: ex.exerciseId,
       name: ex.name.trim(),
       weight: ex.weight.trim() === '' ? null : Number(ex.weight),
       isBodyweight: ex.isBodyweight,
@@ -269,6 +277,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
     const comment = comments.trim().length > 0 ? comments.trim() : null;
 
     setIsSaving(true);
+    setSaveError(null);
     try {
       if (isEditing && workout && onUpdate) {
         await onUpdate(workout.id, { workoutDate: workout.workoutDate, durationSeconds, comments: comment, exercises });
@@ -276,6 +285,8 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
         await onSave({ workoutDate: defaultDate, sourceRoutineId: appliedRoutineId, durationSeconds, comments: comment, exercises });
         clearDraft(DRAFT_KEY);
       }
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'No se pudo guardar el entrenamiento.');
     } finally {
       setIsSaving(false);
     }
@@ -284,6 +295,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
   return (
     <Modal title={isEditing ? 'Editar entrenamiento' : 'Nuevo entrenamiento'} onClose={onClose}>
       <div className={uiStyles.modalForm}>
+        {saveError && <p role="alert">{saveError}</p>}
         {pendingDraft && (
           <div className={uiStyles.card} style={{ padding: '0.85rem 1rem' }}>
             <p className={uiStyles.cardNote} style={{ marginBottom: '0.65rem' }}>
@@ -343,7 +355,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
         {suggestedRoutine && !suggestionDismissed && (
           <div className={uiStyles.card} style={{ padding: '0.85rem 1rem' }}>
             <p className={uiStyles.cardNote} style={{ marginBottom: '0.65rem' }}>
-              Rutina recomendada para hoy ({WEEKDAY_FULL_LABELS[suggestedRoutine.weekday!]}):{' '}
+              Rutina para el día seleccionado ({defaultDate ? WEEKDAY_FULL_LABELS[getWeekdayOfDateIso(defaultDate)] : ''}):{' '}
               <strong>{suggestedRoutine.name}</strong>. ¿Quieres usarla?
             </p>
             <div className={uiStyles.modalActions} style={{ marginTop: 0 }}>
@@ -362,11 +374,8 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
             Usar rutina (opcional)
             <select
               className={uiStyles.modalInput}
-              defaultValue=""
-              onChange={(event) => {
-                if (event.target.value) applyRoutine(event.target.value);
-                event.target.value = '';
-              }}
+              value={appliedRoutineId ?? ''}
+              onChange={(event) => { if (event.target.value) applyRoutine(event.target.value); }}
             >
               <option value="" disabled>
                 Elegir rutina para precargar ejercicios…
@@ -374,7 +383,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
               {routines.map((routine) => (
                 <option key={routine.id} value={routine.id}>
                   {routine.name}
-                  {routine.weekday !== null ? ` · ${WEEKDAY_FULL_LABELS[routine.weekday]}` : ''}
+                  {(routine.weekdays ?? (routine.weekday === null ? [] : [routine.weekday])).map(day => WEEKDAY_FULL_LABELS[day]).join(', ')}
                 </option>
               ))}
             </select>
@@ -384,13 +393,8 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
         {draftExercises.map((ex) => (
           <div key={ex.id} className={styles.draftExerciseBlock}>
             <div className={styles.draftExerciseTop}>
-              <input
-                className={uiStyles.modalInput}
-                type="text"
-                placeholder="Ejercicio (ej. Sentadilla)"
-                value={ex.name}
-                onChange={(event) => updateExercise(ex.id, { name: event.target.value })}
-              />
+              <ExercisePicker catalog={catalog} exerciseId={ex.exerciseId} name={ex.name} onCreated={onCatalogCreated}
+                onSelect={exercise => updateExercise(ex.id, { name: exercise.name, exerciseId: exercise.id })} />
               <button
                 type="button"
                 className={uiStyles.iconInlineButton}
@@ -463,7 +467,7 @@ export function NewWorkoutModal({ workout, routines = [], defaultDate, onClose, 
           />
         </label>
 
-        <div className={uiStyles.modalActions}>
+        <div className={`${uiStyles.modalActions} ${styles.trainingModalActions}`}>
           <button type="button" className={uiStyles.modalCancelButton} onClick={onClose}>
             Cancelar
           </button>

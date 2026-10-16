@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnalyticsView } from '../../features/analytics/components/AnalyticsView';
 import { analyticsApi } from '../../features/analytics/services/analytics.api';
 import { PersonalAnalyticsSummary } from '../../features/analytics/types/analytics.types';
@@ -12,9 +12,11 @@ import { Spinner } from '../../shared/components/ui/Spinner';
 export default function AnalyticsPage() {
   const router = useRouter();
   const { user, accessToken, isLoading: isAuthLoading } = useAuth();
-  const [range, setRange] = useState<'30d' | '90d'>('90d');
+  const [range, setRange] = useState<'30d' | '90d'>('30d');
   const [summary, setSummary] = useState<PersonalAnalyticsSummary | null>(null);
   const [isLoadingSummary, setIsLoadingSummary] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const requestId = useRef(0);
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -24,11 +26,16 @@ export default function AnalyticsPage() {
 
   const loadSummary = useCallback(async () => {
     if (!user) return;
+    const id = ++requestId.current;
     setIsLoadingSummary(true);
+    setError(null);
     try {
-      setSummary(await analyticsApi.getPersonalSummary(accessToken, buildRange(range)));
+      const result = await analyticsApi.getPersonalSummary(accessToken, buildRange(range));
+      if (id === requestId.current) setSummary(result);
+    } catch {
+      if (id === requestId.current) setError('No se pudieron cargar tus registros.');
     } finally {
-      setIsLoadingSummary(false);
+      if (id === requestId.current) setIsLoadingSummary(false);
     }
   }, [accessToken, range, user]);
 
@@ -36,12 +43,16 @@ export default function AnalyticsPage() {
     loadSummary();
   }, [loadSummary]);
 
-  if (isAuthLoading || !user || isLoadingSummary || !summary) {
+  if (isAuthLoading || !user || isLoadingSummary) {
     return (
       <DashboardShell>
         <Spinner />
       </DashboardShell>
     );
+  }
+
+  if (error || !summary) {
+    return <DashboardShell><p role="alert">{error ?? 'No hay información disponible.'}</p><button type="button" onClick={loadSummary}>Reintentar</button></DashboardShell>;
   }
 
   return (
@@ -59,5 +70,5 @@ function buildRange(range: '30d' | '90d'): { from: string; to: string } {
 }
 
 function toDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

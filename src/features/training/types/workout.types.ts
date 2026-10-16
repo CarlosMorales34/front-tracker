@@ -1,4 +1,5 @@
 export interface WorkoutExercise {
+  exerciseId?: string | null;
   id: string;
   name: string;
   // Para ejercicios de peso corporal (dominadas, lagartijas), `weight` deja
@@ -20,6 +21,7 @@ export interface Workout {
 }
 
 export interface CreateWorkoutExerciseInput {
+  exerciseId?: string | null;
   name: string;
   weight: number | null;
   isBodyweight: boolean;
@@ -43,6 +45,7 @@ export interface UpdateWorkoutInput {
 }
 
 export interface WorkoutRoutineExercise {
+  exerciseId?: string | null;
   id: string;
   name: string;
   targetSets: number;
@@ -52,6 +55,7 @@ export interface WorkoutRoutineExercise {
 }
 
 export interface WorkoutRoutine {
+  weekdays?: number[];
   id: string;
   name: string;
   weekday: number | null;
@@ -59,6 +63,7 @@ export interface WorkoutRoutine {
 }
 
 export interface WorkoutRoutineExerciseInput {
+  exerciseId?: string | null;
   name: string;
   targetSets: number;
   targetReps: number;
@@ -67,6 +72,7 @@ export interface WorkoutRoutineExerciseInput {
 }
 
 export interface WorkoutRoutineInput {
+  weekdays?: number[];
   name: string;
   weekday: number | null;
   exercises: WorkoutRoutineExerciseInput[];
@@ -106,4 +112,11 @@ export interface TrainingStreak {
 // rompen la racha de entrenamiento aunque no haya sesión ese día.
 export interface TrainingSettings {
   restWeekdays: number[];
+}
+
+export interface CatalogExercise {
+  id: string;
+  name: string;
+  aliases: string[];
+  recordCount: number;
 }

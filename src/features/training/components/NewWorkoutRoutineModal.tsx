@@ -6,11 +6,13 @@ import { PlusIcon, TrashIcon } from '../../../shared/components/icons/icons';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draft';
 import { WEEKDAY_FULL_LABELS } from '../../../shared/lib/week';
-import { WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
+import { CatalogExercise, WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
+import { ExercisePicker } from './ExercisePicker';
 import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
 import styles from './training.module.css';
 
 interface DraftRoutineExercise {
+  exerciseId?: string | null;
   id: number;
   name: string;
   targetSets: string;
@@ -20,6 +22,8 @@ interface DraftRoutineExercise {
 }
 
 interface NewWorkoutRoutineModalProps {
+  catalog: CatalogExercise[];
+  onCatalogCreated: (exercise: CatalogExercise) => void;
   routine?: WorkoutRoutine;
   onClose: () => void;
   onSave: (input: WorkoutRoutineInput) => Promise<void>;
@@ -29,9 +33,16 @@ interface NewWorkoutRoutineModalProps {
 // solo aplica al crear, no al editar una rutina existente.
 const DRAFT_KEY = 'new-workout-routine';
 
+const ROUTINE_PRESETS = [
+  { name: 'Pecho, hombros y bíceps', days: [1, 4], pattern: /pecho|press banca|lagartija|flexion|apertura|press militar|hombro|elevacion|curl|martillo/ },
+  { name: 'Pierna', days: [2, 5], pattern: /sentadilla|peso muerto|pantorrill|cuadriceps|femoral|prensa|zancada/ },
+  { name: 'Espalda y tríceps', days: [3, 6], pattern: /remo|dominada|jalon|espalda|triceps|fondo/ },
+];
+
 interface RoutineDraft {
   name: string;
   weekday: number | null;
+  weekdays?: number[];
   draftExercises: DraftRoutineExercise[];
 }
 
@@ -39,6 +50,7 @@ function draftFromRoutine(routine: WorkoutRoutine): DraftRoutineExercise[] {
   return routine.exercises.map((ex, index) => ({
     id: index,
     name: ex.name,
+    exerciseId: ex.exerciseId,
     targetSets: String(ex.targetSets),
     targetReps: String(ex.targetReps),
     suggestedWeight: ex.suggestedWeight === null ? '' : String(ex.suggestedWeight),
@@ -46,10 +58,10 @@ function draftFromRoutine(routine: WorkoutRoutine): DraftRoutineExercise[] {
   }));
 }
 
-export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutRoutineModalProps) {
+export function NewWorkoutRoutineModal({ routine, catalog, onCatalogCreated, onClose, onSave }: NewWorkoutRoutineModalProps) {
   const isEditing = routine !== undefined;
   const [name, setName] = useState(routine?.name ?? '');
-  const [weekday, setWeekday] = useState<number | null>(routine?.weekday ?? null);
+  const [weekdays, setWeekdays] = useState<number[]>(routine?.weekdays ?? (routine?.weekday == null ? [] : [routine.weekday]));
   const nextIdRef = useRef(routine?.exercises.length ?? 1);
   const [draftExercises, setDraftExercises] = useState<DraftRoutineExercise[]>(() =>
     routine
@@ -57,6 +69,7 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
       : [{ id: 0, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '', isBodyweight: false }],
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [pendingDraft, setPendingDraft] = useState<RoutineDraft | null>(null);
   const [draftChecked, setDraftChecked] = useState(isEditing);
@@ -72,7 +85,7 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
   const recoverDraft = () => {
     if (!pendingDraft) return;
     setName(pendingDraft.name);
-    setWeekday(pendingDraft.weekday);
+    setWeekdays(pendingDraft.weekdays ?? (pendingDraft.weekday === null ? [] : [pendingDraft.weekday]));
     setDraftExercises(pendingDraft.draftExercises);
     nextIdRef.current = pendingDraft.draftExercises.length;
     setPendingDraft(null);
@@ -86,11 +99,11 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
   useEffect(() => {
     if (isEditing || !draftChecked || pendingDraft) return;
     const timeout = setTimeout(() => {
-      saveDraft<RoutineDraft>(DRAFT_KEY, { name, weekday, draftExercises });
+      saveDraft<RoutineDraft>(DRAFT_KEY, { name, weekday: weekdays.length === 1 ? weekdays[0]! : null, weekdays, draftExercises });
     }, 500);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, draftChecked, pendingDraft, name, weekday, draftExercises]);
+  }, [isEditing, draftChecked, pendingDraft, name, weekdays, draftExercises]);
 
   const addDraftExercise = () => {
     setDraftExercises((prev) => [
@@ -113,12 +126,15 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
     if (validExercises.length === 0) return;
 
     setIsSaving(true);
+    setSaveError(null);
     try {
       await onSave({
         name: name.trim(),
-        weekday,
+        weekday: weekdays.length === 1 ? weekdays[0]! : null,
+        weekdays,
         exercises: validExercises.map((ex) => ({
           name: ex.name.trim(),
+          exerciseId: ex.exerciseId,
           targetSets: Number(ex.targetSets) || 1,
           targetReps: Number(ex.targetReps) || 1,
           suggestedWeight: ex.suggestedWeight.trim() === '' ? null : Number(ex.suggestedWeight),
@@ -126,6 +142,8 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
         })),
       });
       clearDraft(DRAFT_KEY);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la rutina.');
     } finally {
       setIsSaving(false);
     }
@@ -162,32 +180,24 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
           />
         </label>
 
-        <label className={uiStyles.modalLabel}>
-          Día de la semana (opcional)
-          <select
-            className={uiStyles.modalInput}
-            value={weekday ?? ''}
-            onChange={(event) => setWeekday(event.target.value === '' ? null : Number(event.target.value))}
-          >
-            <option value="">Sin día asociado</option>
-            {WEEKDAY_FULL_LABELS.map((label, index) => (
-              <option key={index} value={index}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!isEditing && <label className={uiStyles.modalLabel}>Distribución semanal<select className={uiStyles.modalInput} defaultValue="" onChange={event => {
+          const preset = ROUTINE_PRESETS[Number(event.target.value)]; if (!preset) return;
+          setName(preset.name); setWeekdays(preset.days);
+          const matches = catalog.filter(exercise => {
+            const name = exercise.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            return preset.pattern.test(name) && (preset.days[0] !== 1 || !/femoral|pierna|cuadriceps/.test(name));
+          });
+          const rows: DraftRoutineExercise[] = matches.map((exercise, index) => ({ id: index, name: exercise.name, exerciseId: exercise.id, targetSets: '3', targetReps: '10', suggestedWeight: '', isBodyweight: /dominada|lagartija|flexion/i.test(exercise.name) }));
+          setDraftExercises(rows.length ? rows : [{ id: 0, name: '', targetSets: '3', targetReps: '10', suggestedWeight: '', isBodyweight: false }]);
+          nextIdRef.current = rows.length || 1;
+        }}><option value="" disabled>Elegir distribución o personalizar</option>{ROUTINE_PRESETS.map((preset, index) => <option key={preset.name} value={index}>{preset.name}</option>)}</select></label>}
+        <fieldset className={styles.routineWeekdays}><legend>Días habituales</legend>{WEEKDAY_FULL_LABELS.map((label, day) => <label key={day}><input type="checkbox" checked={weekdays.includes(day)} onChange={() => setWeekdays(days => days.includes(day) ? days.filter(value => value !== day) : [...days, day].sort((a,b) => a-b))} />{label}</label>)}</fieldset>
 
         {draftExercises.map((ex) => (
           <div key={ex.id} className={styles.draftExerciseBlock}>
             <div className={styles.draftExerciseTop}>
-              <input
-                className={uiStyles.modalInput}
-                type="text"
-                placeholder="Ejercicio (ej. Sentadilla)"
-                value={ex.name}
-                onChange={(event) => updateExercise(ex.id, { name: event.target.value })}
-              />
+              <ExercisePicker catalog={catalog} exerciseId={ex.exerciseId} name={ex.name} onCreated={onCatalogCreated}
+                onSelect={exercise => updateExercise(ex.id, { name: exercise.name, exerciseId: exercise.id })} />
               <button
                 type="button"
                 className={uiStyles.iconInlineButton}
@@ -246,7 +256,8 @@ export function NewWorkoutRoutineModal({ routine, onClose, onSave }: NewWorkoutR
           <PlusIcon /> Agregar ejercicio
         </button>
 
-        <div className={uiStyles.modalActions}>
+        <div className={`${uiStyles.modalActions} ${styles.trainingModalActions}`}>
+          {saveError && <p role="alert">{saveError}</p>}
           <button type="button" className={uiStyles.modalCancelButton} onClick={onClose}>
             Cancelar
           </button>
