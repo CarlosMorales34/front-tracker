@@ -42,7 +42,8 @@ function formatAccumulatedDuration(totalSeconds: number): string {
 // cruzado que el rediseño buscaba evitar entre Progreso corporal y
 // Entrenamientos.
 export function HealthSummaryView() {
-  const { accessToken } = useAuth();
+  const { user, accessToken } = useAuth();
+  const userId = user?.id;
   const [weekStart, setWeekStart] = useState(getTrainingWeekStartIso);
   const [bodySummary, setBodySummary] = useState<BodyProgressSummary | null>(null);
   const [weekWorkouts, setWeekWorkouts] = useState<Workout[]>([]);
@@ -54,17 +55,19 @@ export function HealthSummaryView() {
   const [isWorkoutModalOpen, setWorkoutModalOpen] = useState(false);
 
   const load = useCallback(async () => {
+    if (!userId || !accessToken) return;
+    const context = { userId };
     const [summary, workouts, workoutRoutines, exercises] = await Promise.all([
       bodyProgressApi.getSummary(accessToken),
-      workoutApi.listForWeek(weekStart, accessToken),
-      workoutRoutineApi.list(accessToken),
-      exerciseCatalogApi.list(accessToken),
+      workoutApi.listForWeek(weekStart, accessToken, context),
+      workoutRoutineApi.list(accessToken, context),
+      exerciseCatalogApi.list(accessToken, context),
     ]);
     setBodySummary(summary);
     setWeekWorkouts(workouts);
     setRoutines(workoutRoutines);
     setCatalog(exercises);
-  }, [weekStart, accessToken]);
+  }, [weekStart, accessToken, userId]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -105,7 +108,7 @@ export function HealthSummaryView() {
       ignoreIfQueued(error);
     }
     setMeasurementModalOpen(false);
-    load();
+    void load().catch(() => setLoadError(true));
   };
 
   const handleSaveWorkout = async (input: CreateWorkoutInput) => {
@@ -115,7 +118,7 @@ export function HealthSummaryView() {
       ignoreIfQueued(error);
     }
     setWorkoutModalOpen(false);
-    load();
+    void load().catch(() => setLoadError(true));
   };
 
   if (isLoading) return <Spinner />;

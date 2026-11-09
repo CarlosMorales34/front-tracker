@@ -37,12 +37,35 @@ async function parseBody<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export interface ApiFetchOptions {
+  offlineCacheKey?: string;
+  timeoutMs?: number;
+  queueOffline?: boolean;
+}
+
+export async function apiFetch<T>(path: string, init?: RequestInit, options?: ApiFetchOptions): Promise<T> {
+  if (options?.timeoutMs === undefined) return request<T>(path, init, options);
+  const controller = new AbortController();
+  const cancel = () => controller.abort(init?.signal?.reason);
+  if (init?.signal?.aborted) cancel();
+  else init?.signal?.addEventListener('abort', cancel, { once: true });
+  const deadline = new DOMException('Request timed out', 'TimeoutError');
+  const timeout = setTimeout(() => controller.abort(deadline), options.timeoutMs);
+  try {
+    return await request<T>(path, { ...init, signal: controller.signal }, options, deadline);
+  } finally {
+    clearTimeout(timeout);
+    init?.signal?.removeEventListener('abort', cancel);
+  }
+}
+
+async function request<T>(path: string, init?: RequestInit, options?: ApiFetchOptions, deadline?: DOMException): Promise<T> {
   const method = (init?.method ?? 'GET').toUpperCase();
   const url = path;
   const headers = { 'Content-Type': 'application/json', ...init?.headers } as Record<string, string>;
 
   if (method === 'GET') {
+    const cacheKey = options?.offlineCacheKey ?? path;
     try {
       const response = await fetch(url, { ...init, headers });
       if (!response.ok) {
@@ -50,14 +73,15 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
         throw new Error(body.message ?? 'Request failed');
       }
       const data = await parseBody<T>(response);
-      cacheSet(path, data);
+      if (!init?.signal?.aborted) cacheSet(cacheKey, data);
       return data;
     } catch (error) {
       // Sin red: si hay una respuesta ya vista para este mismo path (con su
       // query string), se sirve esa en vez de romper la pantalla -- datos
       // viejos son mejor que ninguno mientras no hay conexión.
-      if (isNetworkError(error)) {
-        const cached = cacheGet<T>(path);
+      const timedOut = deadline !== undefined && init?.signal?.reason === deadline;
+      if (timedOut || (!init?.signal?.aborted && isNetworkError(error))) {
+        const cached = cacheGet<T>(cacheKey);
         if (cached !== null) return cached;
       }
       throw error;
@@ -77,7 +101,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     }
     return await parseBody<T>(response);
   } catch (error) {
-    if (!isAuthEndpoint && isNetworkError(error)) {
+    if (!isAuthEndpoint && options?.queueOffline !== false && !init?.signal?.aborted && isNetworkError(error)) {
       enqueueMutation(url, method, init?.body as string | undefined, headers);
       throw new OfflineQueuedError();
     }

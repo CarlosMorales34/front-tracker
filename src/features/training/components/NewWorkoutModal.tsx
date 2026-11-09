@@ -8,6 +8,7 @@ import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draf
 import { WEEKDAY_FULL_LABELS, getWeekdayOfDateIso } from '../../../shared/lib/week';
 import { CatalogExercise, CreateWorkoutInput, UpdateWorkoutInput, Workout, WorkoutRoutine } from '../types/workout.types';
 import { ExercisePicker } from './ExercisePicker';
+import { trainingErrorMessage } from '../services/training-fetch';
 import { catalogForRoutines, routinesForDate } from '../utils/training-schedule';
 import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
 import { formatMMSS, formatDurationLabel } from '../utils/workout-format';
@@ -46,6 +47,7 @@ interface NewWorkoutModalProps {
   workout?: Workout;
   routines?: WorkoutRoutine[];
   routinesReady?: boolean;
+  routinesUnavailable?: boolean;
   // Día seleccionado en WorkoutDayChipStrip -- solo aplica al crear (editar
   // conserva la fecha original del workout, ver handleSave).
   defaultDate?: string;
@@ -86,7 +88,7 @@ function draftExercisesFromWorkout(workout: Workout): DraftExercise[] {
   }));
 }
 
-export function NewWorkoutModal({ workout, routines = [], routinesReady = true, defaultDate, catalog, onCatalogCreated, onClose, onSave, onUpdate }: NewWorkoutModalProps) {
+export function NewWorkoutModal({ workout, routines = [], routinesReady = true, routinesUnavailable = false, defaultDate, catalog, onCatalogCreated, onClose, onSave, onUpdate }: NewWorkoutModalProps) {
   const isEditing = workout !== undefined;
   const dayRoutines = useMemo(() => defaultDate ? routinesForDate(routines, defaultDate) : [], [routines, defaultDate]);
   const defaultRoutine = !isEditing && dayRoutines.length === 1 ? dayRoutines[0] : undefined;
@@ -307,7 +309,7 @@ export function NewWorkoutModal({ workout, routines = [], routinesReady = true, 
         clearDraft(DRAFT_KEY);
       }
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : 'No se pudo guardar el entrenamiento.');
+      setSaveError(trainingErrorMessage(error, 'No se pudo guardar el entrenamiento.'));
     } finally {
       setIsSaving(false);
     }
@@ -375,7 +377,9 @@ export function NewWorkoutModal({ workout, routines = [], routinesReady = true, 
         )}
 
         {!isEditing && !routinesReady && <p role="status">Cargando rutina del día…</p>}
-        {!isEditing && routinesReady && dayRoutines.length === 0 && !appliedRoutine && <p className={uiStyles.cardNote}>Sin rutina asignada a esta fecha.</p>}
+        {!isEditing && routinesReady && dayRoutines.length === 0 && !appliedRoutine && <p className={uiStyles.cardNote}>
+          {routinesUnavailable ? 'No se pudo cargar la rutina del día. Puedes registrar un entrenamiento libre.' : 'Sin rutina asignada a esta fecha.'}
+        </p>}
         {!isEditing && <label className={styles.scheduleToggle}><input type="checkbox" checked={showAllExercises} onChange={event => setShowAllExercises(event.target.checked)} />Otras rutinas y ejercicios</label>}
         {visibleRoutines.length > 0 && (
           <label className={uiStyles.modalLabel}>

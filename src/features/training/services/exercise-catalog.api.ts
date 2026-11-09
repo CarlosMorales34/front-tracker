@@ -1,10 +1,9 @@
-import { apiFetch } from '../../../shared/lib/api-client';
-import { CatalogExercise } from '../types/workout.types';
+import { trainingFetch, type TrainingReadContext } from './training-fetch';
+import type { CatalogExercise } from '../types/workout.types';
 
-const headers = (token?: string | null): HeadersInit => token ? { Authorization: `Bearer ${token}` } : {};
 export const exerciseCatalogApi = {
-  list: (token?: string | null) => apiFetch<CatalogExercise[]>('/api/exercise-catalog', { headers: headers(token) }),
-  create: (name: string, token?: string | null) => apiFetch<CatalogExercise>('/api/exercise-catalog', { method: 'POST', headers: headers(token), body: JSON.stringify({ name }) }),
-  rename: (id: string, name: string, token?: string | null) => apiFetch<void>(`/api/exercise-catalog/${id}`, { method: 'PUT', headers: headers(token), body: JSON.stringify({ name }) }),
-  merge: (id: string, targetId: string, token?: string | null) => apiFetch<void>(`/api/exercise-catalog/${id}/merge`, { method: 'POST', headers: headers(token), body: JSON.stringify({ targetId }) }),
+  list: (token?: string | null, context?: TrainingReadContext) => trainingFetch<CatalogExercise[]>('/api/exercise-catalog', token, undefined, context),
+  create: (name: string, token?: string | null) => trainingFetch<CatalogExercise>('/api/exercise-catalog', token, { method: 'POST', body: JSON.stringify({ name }) }),
+  rename: (id: string, name: string, token?: string | null) => trainingFetch<void>(`/api/exercise-catalog/${id}`, token, { method: 'PUT', body: JSON.stringify({ name }) }),
+  merge: (id: string, targetId: string, token?: string | null) => trainingFetch<void>(`/api/exercise-catalog/${id}/merge`, token, { method: 'POST', body: JSON.stringify({ targetId }) }),
 };

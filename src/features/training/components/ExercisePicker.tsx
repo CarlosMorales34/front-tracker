@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { CatalogExercise } from '../types/workout.types';
 import { exerciseCatalogApi } from '../services/exercise-catalog.api';
+import { trainingErrorMessage } from '../services/training-fetch';
 import uiStyles from '../../../shared/components/ui/ui.module.css';
 import styles from './training.module.css';
 
@@ -11,7 +12,7 @@ interface Props {
   catalog: CatalogExercise[];
   exerciseId?: string | null;
   name: string;
-  onSelect: (exercise: CatalogExercise) => void;
+  onSelect: (exercise: { id?: string; name: string }) => void;
   onCreated: (exercise: CatalogExercise) => void;
   allowCreate?: boolean;
 }
@@ -30,8 +31,21 @@ export function ExercisePicker({ catalog, exerciseId, name, onSelect, onCreated,
   const create = async () => {
     if (!newName.trim()) return;
     setSaving(true); setError(null);
-    try { const exercise = await exerciseCatalogApi.create(newName.trim(), accessToken); onCreated(exercise); onSelect(exercise); setCreating(false); setNewName(''); }
-    catch { setError('No se pudo guardar el ejercicio.'); } finally { setSaving(false); }
+    try {
+      if (!navigator.onLine) {
+        // The workout or routine resolves a name on sync; don't queue a separate catalog write.
+        onSelect({ name: newName.trim() });
+      } else {
+        const exercise = await exerciseCatalogApi.create(newName.trim(), accessToken);
+        onCreated(exercise);
+        onSelect(exercise);
+      }
+      setCreating(false); setNewName('');
+    } catch (error) {
+      setError(trainingErrorMessage(error, 'No se pudo guardar el ejercicio.'));
+    } finally {
+      setSaving(false);
+    }
   };
   return <div className={styles.exercisePicker}>
     <select className={uiStyles.modalInput} aria-label="Ejercicio del catálogo" value={selected?.id ?? (name ? 'legacy' : '')} onChange={event => {

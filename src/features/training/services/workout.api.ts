@@ -1,5 +1,5 @@
-import { apiFetch } from '../../../shared/lib/api-client';
-import {
+import { trainingFetch, type TrainingReadContext } from './training-fetch';
+import type {
   CreateWorkoutInput,
   TrainingSettings,
   TrainingStreak,
@@ -8,44 +8,37 @@ import {
   WorkoutPerformance,
 } from '../types/workout.types';
 
-function authHeaders(accessToken?: string | null): HeadersInit {
-  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-}
-
 export const workoutApi = {
-  listForWeek: (weekStart: string, accessToken?: string | null): Promise<Workout[]> =>
-    apiFetch<Workout[]>(`/api/workouts?weekStart=${weekStart}`, { headers: authHeaders(accessToken) }),
+  listForWeek: (weekStart: string, accessToken?: string | null, context?: TrainingReadContext): Promise<Workout[]> =>
+    trainingFetch(`/api/workouts?weekStart=${weekStart}`, accessToken, undefined, context),
 
   create: (input: CreateWorkoutInput, accessToken?: string | null): Promise<Workout> =>
-    apiFetch<Workout>('/api/workouts', {
+    trainingFetch('/api/workouts', accessToken, {
       method: 'POST',
       body: JSON.stringify(input),
-      headers: authHeaders(accessToken),
     }),
 
   update: (id: string, input: UpdateWorkoutInput, accessToken?: string | null): Promise<Workout> =>
-    apiFetch<Workout>(`/api/workouts/${id}`, {
+    trainingFetch(`/api/workouts/${id}`, accessToken, {
       method: 'PUT',
       body: JSON.stringify(input),
-      headers: authHeaders(accessToken),
     }),
 
   delete: (id: string, accessToken?: string | null): Promise<void> =>
-    apiFetch<void>(`/api/workouts/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
+    trainingFetch(`/api/workouts/${id}`, accessToken, { method: 'DELETE' }),
 
-  getPerformance: (accessToken?: string | null): Promise<WorkoutPerformance> =>
-    apiFetch<WorkoutPerformance>('/api/workouts/performance', { headers: authHeaders(accessToken) }),
+  getPerformance: (accessToken?: string | null, context?: TrainingReadContext): Promise<WorkoutPerformance> =>
+    trainingFetch('/api/workouts/performance', accessToken, undefined, context),
 
-  getStreak: (accessToken?: string | null): Promise<TrainingStreak> =>
-    apiFetch<TrainingStreak>('/api/workouts/streak', { headers: authHeaders(accessToken) }),
+  getStreak: (accessToken?: string | null, context?: TrainingReadContext): Promise<TrainingStreak> =>
+    trainingFetch('/api/workouts/streak', accessToken, undefined, context),
 
-  getSettings: (accessToken?: string | null): Promise<TrainingSettings> =>
-    apiFetch<TrainingSettings>('/api/workouts/settings', { headers: authHeaders(accessToken) }),
+  getSettings: (accessToken?: string | null, context?: TrainingReadContext): Promise<TrainingSettings> =>
+    trainingFetch('/api/workouts/settings', accessToken, undefined, context),
 
   updateSettings: (input: TrainingSettings, accessToken?: string | null): Promise<TrainingSettings> =>
-    apiFetch<TrainingSettings>('/api/workouts/settings', {
+    trainingFetch('/api/workouts/settings', accessToken, {
       method: 'PUT',
       body: JSON.stringify(input),
-      headers: authHeaders(accessToken),
     }),
 };

@@ -11,6 +11,7 @@ import { formatTrainingWeekRange, getTrainingDayChips, getTrainingWeekStartIso }
 import { workoutApi } from '../services/workout.api';
 import { workoutRoutineApi } from '../services/workout-routine.api';
 import { exerciseCatalogApi } from '../services/exercise-catalog.api';
+import { trainingErrorMessage } from '../services/training-fetch';
 import { ExerciseCatalogModal } from './ExerciseCatalogModal';
 import {
   CreateWorkoutInput,
@@ -39,12 +40,18 @@ function pickDefaultDay(weekStartIso: string, includeWeekend: boolean): string {
 }
 
 export function TrainingView() {
-  const { accessToken } = useAuth();
+  const { user, accessToken } = useAuth();
+  if (!user || !accessToken) return null;
+  return <TrainingViewContent key={user.id} userId={user.id} accessToken={accessToken} />;
+}
+
+function TrainingViewContent({ userId, accessToken }: { userId: string; accessToken: string }) {
   const confirm = useConfirm();
   const [weekStart, setWeekStart] = useState(getTrainingWeekStartIso);
   const [includeWeekend, setIncludeWeekend] = useState(() => [0, 6].includes(getWeekdayOfDateIso(getTodayIso())));
   const [selectedDayIso, setSelectedDayIso] = useState(getTodayIso);
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [weekResult, setWeekResult] = useState<{ weekStart: string; workouts: Workout[] } | null>(null);
+  const workouts = useMemo(() => weekResult?.weekStart === weekStart ? weekResult.workouts : [], [weekResult, weekStart]);
   const [performance, setPerformance] = useState<WorkoutPerformance | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
@@ -56,8 +63,13 @@ export function TrainingView() {
   const [isSavingRestDays, setIsSavingRestDays] = useState(false);
   const [catalog, setCatalog] = useState<CatalogExercise[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [routinesReady, setRoutinesReady] = useState(false);
+  const [failedSections, setFailedSections] = useState<string[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [routineStatus, setRoutineStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
+  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
+  const [offline, setOffline] = useState(false);
+  const [reloadVersion, setReloadVersion] = useState(0);
+  const reload = useCallback(() => setReloadVersion(version => version + 1), []);
   const catalogCreated = (exercise: CatalogExercise) => setCatalog(previous => [...previous.filter(row => row.id !== exercise.id), exercise].sort((a,b) => a.name.localeCompare(b.name)));
 
   const dayChips = useMemo(() => getTrainingDayChips(weekStart, includeWeekend), [weekStart, includeWeekend]);
@@ -70,28 +82,49 @@ export function TrainingView() {
     setSelectedDayIso(previous => dayChips.some(day => day.dateIso === previous) ? previous : pickDefaultDay(weekStart, includeWeekend));
   }, [weekStart, includeWeekend, dayChips]);
 
-  const load = useCallback(async () => {
-    const [weekWorkouts, workoutPerformance, workoutRoutines, trainingStreak, settings, exercises] = await Promise.all([
-      workoutApi.listForWeek(weekStart, accessToken),
-      workoutApi.getPerformance(accessToken),
-      workoutRoutineApi.list(accessToken),
-      workoutApi.getStreak(accessToken),
-      workoutApi.getSettings(accessToken),
-      exerciseCatalogApi.list(accessToken),
-    ]);
-    setWorkouts(weekWorkouts);
-    setPerformance(workoutPerformance);
-    setRoutines(workoutRoutines);
-    setStreak(trainingStreak);
-    setTrainingSettings(settings);
-    setCatalog(exercises);
-    setRoutinesReady(true);
-    setLoadError(null);
-  }, [weekStart, accessToken]);
+  useEffect(() => {
+    const updateConnection = () => {
+      setOffline(!navigator.onLine);
+      if (navigator.onLine) reload();
+    };
+    setOffline(!navigator.onLine);
+    window.addEventListener('online', updateConnection);
+    window.addEventListener('offline', updateConnection);
+    return () => {
+      window.removeEventListener('online', updateConnection);
+      window.removeEventListener('offline', updateConnection);
+    };
+  }, [reload]);
 
   useEffect(() => {
-    if (accessToken) load().catch(() => setLoadError('No se pudieron cargar tus entrenamientos.'));
-  }, [accessToken, load]);
+    const controller = new AbortController();
+    const context = { userId, signal: controller.signal };
+    setFailedSections([]);
+    const read = <T,>(label: string, request: Promise<T>, onData: (data: T) => void, onFailure?: () => void) => {
+      void request.then(data => {
+        if (!context.signal.aborted) onData(data);
+      }).catch(() => {
+        if (context.signal.aborted) return;
+        setFailedSections(previous => [...previous, label]);
+        onFailure?.();
+      });
+    };
+
+    read('entrenamientos de la semana', workoutApi.listForWeek(weekStart, accessToken, context),
+      data => setWeekResult({ weekStart, workouts: data }));
+    read('rutinas', workoutRoutineApi.list(accessToken, context), data => {
+      setRoutines(data);
+      setRoutineStatus('ready');
+    }, () => setRoutineStatus('unavailable'));
+    read('catálogo', exerciseCatalogApi.list(accessToken, context), data => {
+      setCatalog(data);
+      setCatalogStatus('ready');
+    }, () => setCatalogStatus('unavailable'));
+    read('rendimiento', workoutApi.getPerformance(accessToken, context), setPerformance);
+    read('racha', workoutApi.getStreak(accessToken, context), setStreak);
+    read('días de descanso', workoutApi.getSettings(accessToken, context), setTrainingSettings);
+    return () => controller.abort();
+  }, [accessToken, userId, weekStart, reloadVersion]);
 
   // Abre el modal de "nuevo entrenamiento" cuando se llega acá desde el
   // botón central de acción rápida (ver QuickActionButton / quick-actions.ts),
@@ -121,7 +154,7 @@ export function TrainingView() {
       ignoreIfQueued(error);
     }
     setModalOpen(false);
-    load();
+    reload();
   };
 
   const handleUpdate = async (id: string, input: UpdateWorkoutInput) => {
@@ -131,7 +164,7 @@ export function TrainingView() {
       ignoreIfQueued(error);
     }
     setEditingWorkout(null);
-    load();
+    reload();
   };
 
   const handleDelete = async (id: string) => {
@@ -142,9 +175,13 @@ export function TrainingView() {
     try {
       await workoutApi.delete(id, accessToken);
     } catch (error) {
-      ignoreIfQueued(error);
+      if (!(error instanceof OfflineQueuedError)) {
+        setActionError(trainingErrorMessage(error, 'No se pudo eliminar el entrenamiento.'));
+        return;
+      }
     }
-    load();
+    setActionError(null);
+    reload();
   };
 
   const handleSaveRoutine = async (input: WorkoutRoutineInput) => {
@@ -154,7 +191,7 @@ export function TrainingView() {
       ignoreIfQueued(error);
     }
     setRoutineModalOpen(false);
-    load();
+    reload();
   };
 
   const handleUpdateRoutine = async (input: WorkoutRoutineInput) => {
@@ -165,7 +202,7 @@ export function TrainingView() {
       ignoreIfQueued(error);
     }
     setEditingRoutine(null);
-    load();
+    reload();
   };
 
   const handleToggleRestDay = async (weekday: number) => {
@@ -177,11 +214,11 @@ export function TrainingView() {
     setIsSavingRestDays(true);
     try {
       await workoutApi.updateSettings({ restWeekdays: next }, accessToken);
-      const trainingStreak = await workoutApi.getStreak(accessToken);
-      setStreak(trainingStreak);
+      setActionError(null);
+      reload();
     } catch (error) {
       setTrainingSettings(trainingSettings);
-      ignoreIfQueued(error);
+      if (!(error instanceof OfflineQueuedError)) setActionError(trainingErrorMessage(error, 'No se pudieron actualizar los días de descanso.'));
     } finally {
       setIsSavingRestDays(false);
     }
@@ -193,14 +230,23 @@ export function TrainingView() {
     try {
       await workoutRoutineApi.delete(routine.id, accessToken);
     } catch (error) {
-      ignoreIfQueued(error);
+      if (!(error instanceof OfflineQueuedError)) {
+        setActionError(trainingErrorMessage(error, 'No se pudo eliminar la rutina.'));
+        return;
+      }
     }
-    load();
+    setActionError(null);
+    reload();
   };
 
   return (
     <div>
-      {loadError && <p role="alert">{loadError}<button type="button" onClick={() => load().catch(() => setLoadError('No se pudieron cargar tus entrenamientos.'))}>Reintentar</button></p>}
+      {offline && <p role="status">Sin conexión. Puedes usar los datos cargados previamente en este dispositivo.</p>}
+      {failedSections.length > 0 && <div role="alert">
+        <p>No se pudo actualizar: {failedSections.join(', ')}. Se mantienen los datos disponibles.</p>
+        <button type="button" onClick={reload}>Reintentar</button>
+      </div>}
+      {actionError && <p role="alert">{actionError}</p>}
       <div className={styles.workoutsHeader}>
         <div className={styles.workoutsWeekNav}>
           <button
@@ -213,7 +259,7 @@ export function TrainingView() {
           </button>
           <div>
             <p className={styles.workoutsHeaderTitle}>{formatTrainingWeekRange(weekStart, includeWeekend)}</p>
-            <p className={styles.workoutsHeaderSubtitle}>{workouts.length} entrenamientos registrados</p>
+            <p className={styles.workoutsHeaderSubtitle}>{weekResult?.weekStart === weekStart ? `${workouts.length} entrenamientos registrados` : 'Semana sin cargar'}</p>
           </div>
           <button
             type="button"
@@ -258,6 +304,7 @@ export function TrainingView() {
 
       <RoutinesSection
         routines={routines}
+        status={routineStatus}
         onAddClick={() => setRoutineModalOpen(true)}
         onEdit={setEditingRoutine}
         onDelete={handleDeleteRoutine}
@@ -303,13 +350,14 @@ export function TrainingView() {
             {workout.comments && <p className={styles.workoutComments}>{workout.comments}</p>}
           </div>
         ))}
-        {dayWorkouts.length === 0 && <p className={styles.workoutsEmptyState}>Sin entrenamiento registrado este día.</p>}
+        {weekResult?.weekStart === weekStart && dayWorkouts.length === 0 && <p className={styles.workoutsEmptyState}>Sin entrenamiento registrado este día.</p>}
       </div>
 
       {isModalOpen && (
         <NewWorkoutModal
           catalog={catalog}
-          routinesReady={routinesReady}
+          routinesReady={routineStatus !== 'loading'}
+          routinesUnavailable={routineStatus === 'unavailable'}
           onCatalogCreated={catalogCreated}
           routines={routines}
           defaultDate={selectedDayIso}
@@ -340,7 +388,7 @@ export function TrainingView() {
           onSave={handleUpdateRoutine}
         />
       )}
-      {catalogOpen && <ExerciseCatalogModal catalog={catalog} onClose={() => setCatalogOpen(false)} onChanged={load} />}
+      {catalogOpen && <ExerciseCatalogModal catalog={catalog} status={catalogStatus} offline={offline} onClose={() => setCatalogOpen(false)} onChanged={reload} />}
     </div>
   );
 }

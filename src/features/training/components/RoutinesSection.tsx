@@ -6,6 +6,7 @@ import styles from './training.module.css';
 
 interface RoutinesSectionProps {
   routines: WorkoutRoutine[];
+  status: 'loading' | 'ready' | 'unavailable';
   onAddClick: () => void;
   onEdit: (routine: WorkoutRoutine) => void;
   onDelete: (routine: WorkoutRoutine) => void;
@@ -14,7 +15,7 @@ interface RoutinesSectionProps {
 // Plantillas fijas (ej. "Día de pierna") -- se reutilizan desde el selector
 // "Usar rutina" de Nuevo entrenamiento, esta sección solo administra el
 // catálogo (crear/editar/borrar).
-export function RoutinesSection({ routines, onAddClick, onEdit, onDelete }: RoutinesSectionProps) {
+export function RoutinesSection({ routines, status, onAddClick, onEdit, onDelete }: RoutinesSectionProps) {
   return (
     <div style={{ marginBottom: '1.25rem' }}>
       <div className={styles.workoutsHeader}>
@@ -25,7 +26,9 @@ export function RoutinesSection({ routines, onAddClick, onEdit, onDelete }: Rout
       </div>
 
       {routines.length === 0 ? (
-        <p className={styles.workoutsEmptyState}>Sin rutinas todavía. Crea una para reutilizarla al registrar un entrenamiento.</p>
+        <p className={styles.workoutsEmptyState}>
+          {status === 'loading' ? 'Cargando rutinas…' : status === 'unavailable' ? 'Rutinas no disponibles en este momento.' : 'Sin rutinas todavía. Crea una para reutilizarla al registrar un entrenamiento.'}
+        </p>
       ) : (
         routines.map((routine) => (
           <div key={routine.id} className={`${uiStyles.card} ${styles.workoutCard}`}>

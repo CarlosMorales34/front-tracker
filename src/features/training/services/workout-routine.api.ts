@@ -1,28 +1,22 @@
-import { apiFetch } from '../../../shared/lib/api-client';
-import { WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
-
-function authHeaders(accessToken?: string | null): HeadersInit {
-  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-}
+import { trainingFetch, type TrainingReadContext } from './training-fetch';
+import type { WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
 
 export const workoutRoutineApi = {
-  list: (accessToken?: string | null): Promise<WorkoutRoutine[]> =>
-    apiFetch<WorkoutRoutine[]>('/api/workout-routines', { headers: authHeaders(accessToken) }),
+  list: (accessToken?: string | null, context?: TrainingReadContext): Promise<WorkoutRoutine[]> =>
+    trainingFetch('/api/workout-routines', accessToken, undefined, context),
 
   create: (input: WorkoutRoutineInput, accessToken?: string | null): Promise<WorkoutRoutine> =>
-    apiFetch<WorkoutRoutine>('/api/workout-routines', {
+    trainingFetch('/api/workout-routines', accessToken, {
       method: 'POST',
       body: JSON.stringify(input),
-      headers: authHeaders(accessToken),
     }),
 
   update: (id: string, input: WorkoutRoutineInput, accessToken?: string | null): Promise<WorkoutRoutine> =>
-    apiFetch<WorkoutRoutine>(`/api/workout-routines/${id}`, {
+    trainingFetch(`/api/workout-routines/${id}`, accessToken, {
       method: 'PUT',
       body: JSON.stringify(input),
-      headers: authHeaders(accessToken),
     }),
 
   delete: (id: string, accessToken?: string | null): Promise<void> =>
-    apiFetch<void>(`/api/workout-routines/${id}`, { method: 'DELETE', headers: authHeaders(accessToken) }),
+    trainingFetch(`/api/workout-routines/${id}`, accessToken, { method: 'DELETE' }),
 };

@@ -8,6 +8,7 @@ import { clearDraft, loadDraft, saveDraft } from '../../../shared/lib/local-draf
 import { WEEKDAY_FULL_LABELS } from '../../../shared/lib/week';
 import { CatalogExercise, WorkoutRoutine, WorkoutRoutineInput } from '../types/workout.types';
 import { ExercisePicker } from './ExercisePicker';
+import { trainingErrorMessage } from '../services/training-fetch';
 import { TRAINING_WEEKDAYS } from '../utils/training-schedule';
 import { sanitizeDecimal, sanitizeInt } from '../../../shared/lib/numeric-input';
 import styles from './training.module.css';
@@ -144,7 +145,7 @@ export function NewWorkoutRoutineModal({ routine, catalog, onCatalogCreated, onC
       });
       clearDraft(DRAFT_KEY);
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : 'No se pudo guardar la rutina.');
+      setSaveError(trainingErrorMessage(error, 'No se pudo guardar la rutina.'));
     } finally {
       setIsSaving(false);
     }
